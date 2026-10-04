@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BharatWealth Nexus</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>BharatWealth<span>Nexus</span></h1>
+    <p class="tag">India Wealth Management · Demo</p>
+    <nav>
+      <button class="nav-btn active" data-view="advisor">Advisor Dashboard</button>
+      <button class="nav-btn" data-view="client">Client Portal</button>
+    </nav>
+    <p class="disclaimer">Illustrative simulation with mock data. Not investment or tax advice.</p>
+  </aside>
+
+  <main>
+    <section id="view-advisor">
+      <h2>Advisor Dashboard</h2>
+      <div class="metrics">
+        <div class="metric"><span>Total AUM Managed</span><strong id="m-aum"></strong></div>
+        <div class="metric"><span>Client Count</span><strong id="m-count"></strong></div>
+        <div class="metric"><span>Avg. Client AUM</span><strong id="m-avg"></strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Client</th><th>City</th><th>Age</th><th>Annual Income</th><th>AUM</th><th>Risk</th><th>Regime</th>
+          </tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+      <p class="hint">Clients submitted via the Client Portal are added here (saved in this browser only).</p>
+    </section>
+
+    <section id="view-client" hidden>
+      <h2>Client Portal</h2>
+      <form id="client-form" novalidate>
+        <label>Full name
+          <input id="f-name" required placeholder="e.g. Rohan Mehta">
+        </label>
+        <label>Age
+          <input id="f-age" type="number" min="18" max="90" value="40" required>
+        </label>
+        <label>Annual income (INR)
+          <input id="f-income" type="number" min="0" step="10000" value="2000000" required>
+        </label>
+        <label>Investable corpus (INR)
+          <input id="f-corpus" type="number" min="0" step="100000" value="5000000" required>
+        </label>
+        <label>Risk profile
+          <select id="f-risk">
+            <option>Conservative</option><option selected>Balanced</option><option>Aggressive</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>Tax regime preference</legend>
+          <label class="inline"><input type="radio" name="regime" value="New" checked> New regime</label>
+          <label class="inline"><input type="radio" name="regime" value="Old"> Old regime</label>
+        </fieldset>
+        <p id="form-error" class="error" hidden></p>
+        <button type="submit" class="primary">Generate portfolio</button>
+      </form>
+      <div id="result"></div>
+    </section>
+  </main>
+</div>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
