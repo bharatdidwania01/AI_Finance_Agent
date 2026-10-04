@@ -1,160 +1,188 @@
 <title>BharatWealth Nexus</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
 <style>
-/* Layout: fixed left rail (stacks to a top bar on phones) + scrolling work area. */
+/* Layout: personal side is a single centred column (phone-first); advisor side is a left rail + work area.
+   Tokens: neutrals lean green toward the accent; chart series and status colours are separate token sets. */
 :root{
-  --bg:#f3f5f2; --card:#ffffff; --ink:#18221f; --mute:#5d6a65; --line:#dde3df;
+  --bg:#f3f5f2; --card:#ffffff; --sunk:#eef2ef; --ink:#18221f; --mute:#5d6a65; --line:#dde3df;
   --rail:#0f3b33; --rail-ink:#e8efe9; --rail-mute:#a9c1b8; --rail-line:#2c5a50;
-  --accent:#0f6b5a; --accent-ink:#ffffff; --brass:#b8892b; --ok:#1d6b3f; --warn:#9a5b00; --err:#b3261e;
-  --c-n50:#0f6b5a; --c-next:#5fae9b; --c-debt:#34508f; --c-arb:#8aa4dd; --c-gold:#b8892b;
+  --accent:#0f6b5a; --accent-ink:#ffffff; --accent-soft:#e3f0ec; --brass:#9a7020;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300;
+  --good:#0a7d0a; --warn:#a26400; --bad:#c53030; --na:#6b7471;
+  --good-bg:#e6f4e6; --warn-bg:#fbf0dc; --bad-bg:#fbe6e6; --na-bg:#eceeed;
   --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-head:"IBM Plex Serif",Georgia,"Times New Roman",serif;
   --font-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#101614; --card:#18201d; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
+  --bg:#101614; --card:#18201d; --sunk:#131a17; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
   --rail:#0a1f1b; --rail-ink:#e8efe9; --rail-mute:#8fa9a0; --rail-line:#21423a;
-  --accent:#3fb59b; --accent-ink:#06201a; --brass:#d6a64a; --ok:#5cc489; --warn:#e0a144; --err:#f08a80;
-  --c-n50:#3fb59b; --c-next:#8fd6c4; --c-debt:#6f8fd6; --c-arb:#b3c6ee; --c-gold:#d6a64a;
+  --accent:#3fb59b; --accent-ink:#06201a; --accent-soft:#16302a; --brass:#d6a64a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#2f9a2f;
+  --good:#5cc489; --warn:#f0b54a; --bad:#f08a80; --na:#9aa3a0;
+  --good-bg:#15301f; --warn-bg:#33270f; --bad-bg:#3a1a1a; --na-bg:#242b29;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#101614; --card:#18201d; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
+  --bg:#101614; --card:#18201d; --sunk:#131a17; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
   --rail:#0a1f1b; --rail-ink:#e8efe9; --rail-mute:#8fa9a0; --rail-line:#21423a;
-  --accent:#3fb59b; --accent-ink:#06201a; --brass:#d6a64a; --ok:#5cc489; --warn:#e0a144; --err:#f08a80;
-  --c-n50:#3fb59b; --c-next:#8fd6c4; --c-debt:#6f8fd6; --c-arb:#b3c6ee; --c-gold:#d6a64a;
+  --accent:#3fb59b; --accent-ink:#06201a; --accent-soft:#16302a; --brass:#d6a64a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#2f9a2f;
+  --good:#5cc489; --warn:#f0b54a; --bad:#f08a80; --na:#9aa3a0;
+  --good-bg:#15301f; --warn-bg:#33270f; --bad-bg:#3a1a1a; --na-bg:#242b29;
   color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;font:15px/1.55 var(--font-body);background:var(--bg);color:var(--ink)}
-.layout{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
-.sidebar{background:var(--rail);color:var(--rail-ink);padding:24px 18px;display:flex;flex-direction:column;gap:10px}
-.brand{margin:0;font:600 21px/1.2 var(--font-head)}.brand span{color:var(--brass)}
-.tag{margin:0;color:var(--rail-mute);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
-nav{display:flex;flex-direction:column;gap:6px;margin-top:18px}
-.nav-btn{background:transparent;color:var(--rail-ink);border:1px solid var(--rail-line);padding:10px 12px;border-radius:6px;text-align:left;cursor:pointer;font:inherit}
-.nav-btn:hover{border-color:var(--rail-mute)}
-.nav-btn.active{background:var(--rail-ink);color:var(--rail);border-color:var(--rail-ink);font-weight:600}
-.disclaimer{margin-top:auto;font-size:11px;color:var(--rail-mute)}
-main{padding-block:28px;padding-inline:clamp(16px,4vw,36px);max-width:1120px;width:100%;min-width:0}
-h2{margin:0;font:600 26px/1.2 var(--font-head);text-wrap:balance}
-h3{margin:0 0 8px;font:600 17px/1.3 var(--font-head)}
-.head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:20px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
-.metric span{display:block;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-.metric strong{font:500 24px/1.3 var(--font-num)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
-.table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:9px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
-tbody tr:last-child td{border-bottom:0}
-th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-td.num,th.num{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums}
-.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
-.pill.Conservative{color:var(--c-debt)}.pill.Balanced{color:var(--accent)}.pill.Aggressive{color:var(--warn)}
-.new-flag{font-size:10px;color:var(--brass);margin-left:6px;text-transform:uppercase;letter-spacing:.06em}
-.hint{color:var(--mute);font-size:12px}
-.grid2{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
-form{display:grid;gap:14px}
-label{display:grid;gap:4px;font-weight:600;font-size:13px}
-input,select{font:inherit;font-weight:400;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
-fieldset{border:1px solid var(--line);border-radius:6px;display:flex;flex-wrap:wrap;gap:18px;padding:8px 12px;margin:0}
-legend{font-size:13px;font-weight:600;padding:0 4px}
-label.inline{display:flex;gap:6px;align-items:center;font-weight:400}
-label.inline input{width:auto}
-.btn{font:inherit;font-weight:600;border-radius:6px;padding:10px 14px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
-.btn.ghost{background:transparent;color:var(--accent)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.boot{padding:40px 16px;color:var(--mute);text-align:center}
+h1,h2,h3{font-family:var(--font-head);text-wrap:balance;margin:0}
+h1{font-size:clamp(24px,4vw,32px);font-weight:600;line-height:1.2}
+h2{font-size:21px;font-weight:600;line-height:1.25}
+h3{font-size:16px;font-weight:600;line-height:1.3}
+p{margin:0}
+a{color:var(--accent)}
+.mute{color:var(--mute)}.small{font-size:13px}.tiny{font-size:12px}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.error{color:var(--err);margin:0;font-size:13px}
-.status{font-size:12px;color:var(--mute);min-height:1em;margin:0}
-#result{display:grid;gap:14px;min-width:0}
-.empty{color:var(--mute);border:1px dashed var(--line);border-radius:8px;padding:24px;text-align:center}
-.alloc{display:flex;height:18px;border-radius:4px;overflow:hidden;margin:10px 0 14px}
-.alloc div{height:100%}
-.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:middle}
-.callout{border-left:3px solid var(--ok)}
-.small{font-size:12px;color:var(--mute)}
-ul{padding-left:18px;margin:0}
-#result td:not(.num){white-space:normal}
-@media(max-width:980px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- Top bar (personal side) ---- */
+.topbar{background:var(--rail);color:var(--rail-ink);padding-block:12px;padding-inline:16px}
+.topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font:600 18px/1.2 var(--font-head);color:var(--rail-ink)}.brand span{color:var(--brass)}
+:root .brand span{color:#d6a64a}
+.topbar .btn.ghost{color:var(--rail-ink);border-color:var(--rail-line)}
+
+.page{max-width:1080px;margin:0 auto;padding-block:24px 48px;padding-inline:16px;display:grid;gap:18px}
+.narrow{max-width:680px}
+
+/* ---- Buttons ---- */
+.btn{font:inherit;font-weight:600;font-size:14px;border-radius:8px;padding:10px 16px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;gap:6px;text-decoration:none;justify-content:center}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--mute);padding-inline:8px}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.big{padding:13px 20px;font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+
+/* ---- Cards ---- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0;display:grid;gap:12px}
+.card.soft{background:var(--accent-soft);border-color:transparent}
+.status-line{font-size:13px;color:var(--mute);min-height:1.2em}
+
+/* ---- Welcome ---- */
+.welcome h1{margin-bottom:4px}
+.checklist{margin:0;padding-left:20px;display:grid;gap:6px}
+.consent{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:14px}
+.consent input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--accent)}
+
+/* ---- Wizard ---- */
+.progress{display:grid;gap:8px}
+.progress-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress-bar div{height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.fields{display:grid;gap:18px}
+.group-title{font:600 13px/1.3 var(--font-body);letter-spacing:.05em;text-transform:uppercase;color:var(--brass);padding-top:6px;border-top:1px solid var(--line);margin-top:4px;padding-top:14px}
+.group-title:first-child{border-top:0;margin-top:0;padding-top:0}
+.field{display:grid;gap:6px}
+.field label,.field .label{font-weight:600;font-size:15px}
+.field .per{font-weight:400;color:var(--mute);font-size:13px}
+.field .hint{font-size:13px;color:var(--mute)}
+.field input[type=text],.field input[type=number],.field textarea{font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.field input:focus{border-color:var(--accent)}
+.amount-wrap{position:relative}
+.amount-wrap span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mute);pointer-events:none}
+.amount-wrap input{padding-left:28px!important}
+.echo{font-size:13px;color:var(--accent);min-height:1.2em}
+.echo.err{color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:14px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.item{border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:14px;background:var(--sunk)}
+.err-box{color:var(--bad);font-size:14px}
+.wiz-nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:16px}
+.saved{font-size:12px;color:var(--mute)}
+
+/* ---- Review ---- */
+.review-list{display:grid;gap:0}
+.review-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+.review-row:last-child{border-bottom:0}
+.pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--na-bg);color:var(--na);font-weight:600}
+.pill.done{background:var(--good-bg);color:var(--good)}
+
+/* ---- Dashboard ---- */
+.dash-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:2px}
+.kpi .k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);font-weight:600}
+.kpi .v{font:500 26px/1.25 var(--font-num);font-variant-numeric:tabular-nums}
+.kpi .s{font-size:13px;color:var(--mute)}
+.kpi.lead{background:var(--rail);border-color:var(--rail);color:var(--rail-ink)}
+.kpi.lead .k,.kpi.lead .s{color:var(--rail-mute)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.check{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:6px;align-content:start;background:var(--card)}
+.check .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.check .val{font:500 17px/1.3 var(--font-num)}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.status.good{background:var(--good-bg);color:var(--good)}.status.warn{background:var(--warn-bg);color:var(--warn)}
+.status.bad{background:var(--bad-bg);color:var(--bad)}.status.na{background:var(--na-bg);color:var(--na)}
+.stack{display:flex;gap:2px;height:22px}
+.stack div{height:100%;min-width:3px}
+.stack div:first-child{border-radius:4px 0 0 4px}.stack div:last-child{border-radius:0 4px 4px 0}
+.stack div:only-child{border-radius:4px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:baseline;flex:none}
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.bar-track{height:14px;background:var(--sunk);border-radius:0 4px 4px 0}
+.bar-track div{height:100%;background:var(--s1);border-radius:0 4px 4px 0;min-width:2px}
+.bar-row.out .bar-track div{background:var(--mute)}
+.bar-row.total{font-weight:600;border-top:1px solid var(--line);padding-top:10px}
+.bar-row.total .bar-track div{background:var(--accent)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600;white-space:nowrap}
+td.r,th.r{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:600;border-bottom:0}
+.callout{border-left:3px solid var(--good)}
+.share{border:1px dashed var(--accent);background:var(--accent-soft)}
+textarea.code{font:12px/1.4 var(--font-num);width:100%;min-height:90px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.note{font-size:12px;color:var(--mute)}
+.tip{position:fixed;z-index:10;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:6px;pointer-events:none;max-width:240px}
+
+/* ---- Advisor ---- */
+.adv{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.side{background:var(--rail);color:var(--rail-ink);padding:22px 16px;display:flex;flex-direction:column;gap:10px}
+.side .tag{color:var(--rail-mute);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.side nav{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.nav-btn{background:transparent;color:var(--rail-ink);border:1px solid var(--rail-line);padding:10px 12px;border-radius:8px;text-align:left;cursor:pointer;font:inherit;font-size:14px}
+.nav-btn.active{background:var(--rail-ink);color:var(--rail);border-color:var(--rail-ink);font-weight:600}
+.side-foot{margin-top:auto;display:grid;gap:10px;font-size:12px;color:var(--rail-mute)}
+.switch{display:flex;gap:8px;align-items:center;cursor:pointer;color:var(--rail-ink);font-size:13px}
+.switch input{width:18px;height:18px;accent-color:#d6a64a}
+.side a{color:var(--rail-ink)}
+.adv-main{padding-block:26px 48px;padding-inline:clamp(16px,3.5vw,36px);display:grid;gap:18px;align-content:start;min-width:0;max-width:1120px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:18px;display:grid;gap:10px;background:var(--sunk)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.profile-list td{vertical-align:middle}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:28px 18px;text-align:center;color:var(--mute);display:grid;gap:8px;justify-items:center}
+
+@media(max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:720px){
-  .layout{grid-template-columns:minmax(0,1fr)}
-  .sidebar{flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px 16px;gap:10px 16px}
-  .disclaimer,.tag{display:none}
-  nav{flex-direction:row;margin:0;flex-wrap:wrap}
+  .adv{grid-template-columns:minmax(0,1fr);min-height:0}
+  .side{flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:10px 14px}
+  .side .tag{display:none}
+  .side nav{flex-direction:row;margin:0;flex-wrap:wrap}
+  .side-foot{margin:0;width:100%}
+  .bar-row{grid-template-columns:90px minmax(0,1fr) auto}
+  .kpi .v{font-size:22px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-<div class="layout">
-  <aside class="sidebar">
-    <p class="brand">BharatWealth <span>Nexus</span></p>
-    <p class="tag">India Wealth Management</p>
-    <nav>
-      <button class="nav-btn active" data-view="advisor" id="nav-advisor">Advisor Dashboard</button>
-      <button class="nav-btn" data-view="client" id="nav-client">Client Portal</button>
-    </nav>
-    <p class="disclaimer">Simulation with mock clients. Not investment or tax advice.</p>
-  </aside>
-
-  <main>
-    <section id="view-advisor">
-      <div class="head">
-        <h2>Advisor Dashboard</h2>
-        <button class="btn ghost" id="export-xlsx">Export client book (.xlsx)</button>
-      </div>
-      <div class="metrics">
-        <div class="metric"><span>Total AUM managed</span><strong id="m-aum">-</strong></div>
-        <div class="metric"><span>Client count</span><strong id="m-count">-</strong></div>
-        <div class="metric"><span>Average client AUM</span><strong id="m-avg">-</strong></div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Client</th><th>City</th><th class="num">Age</th><th class="num">Annual income</th><th class="num">AUM</th><th>Risk</th><th>Tax regime</th>
-          </tr></thead>
-          <tbody id="client-rows"></tbody>
-        </table>
-      </div>
-      <p class="status" id="xlsx-status"></p>
-      <p class="hint">Mock HNWI clients. Clients you add in the Client Portal appear here, marked New, and are kept in this browser only.</p>
-    </section>
-
-    <section id="view-client" hidden>
-      <div class="head"><h2>Client Portal</h2></div>
-      <div class="grid2">
-        <form id="client-form" class="card" novalidate>
-          <label for="f-name">Full name
-            <input id="f-name" required placeholder="e.g. Rohan Mehta" autocomplete="name">
-          </label>
-          <label for="f-age">Age
-            <input id="f-age" type="number" min="18" max="90" value="40" required>
-          </label>
-          <label for="f-income">Annual income (INR)
-            <input id="f-income" type="number" min="0" step="10000" value="2500000" required>
-          </label>
-          <label for="f-corpus">Investable corpus (INR)
-            <input id="f-corpus" type="number" min="0" step="100000" value="5000000" required>
-          </label>
-          <label for="f-risk">Risk profile
-            <select id="f-risk">
-              <option>Conservative</option><option selected>Balanced</option><option>Aggressive</option>
-            </select>
-          </label>
-          <fieldset>
-            <legend>Tax regime preference</legend>
-            <label class="inline"><input type="radio" name="regime" id="f-regime-new" value="New" checked> New regime</label>
-            <label class="inline"><input type="radio" name="regime" id="f-regime-old" value="Old"> Old regime</label>
-          </fieldset>
-          <p id="form-error" class="error" hidden></p>
-          <button type="submit" class="btn">Generate portfolio</button>
-        </form>
-        <div id="result"><div class="empty">Fill in the form to see a recommended portfolio and a downloadable PDF proposal.</div></div>
-      </div>
-    </section>
-  </main>
-</div>
+<div id="app"><p class="boot">Loading BharatWealth Nexus...</p></div>
+<div id="tip" class="tip" hidden></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';document.head.appendChild(s)"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s)"></script>
 <script>
@@ -278,6 +306,178 @@ ul{padding-left:18px;margin:0}
     };
   }
 
+  // ---------- Personal profile analysis ----------
+
+  // Accepts "12,50,000", "12.5 lakh", "12.5L", "1.2 cr", "50k", "₹ 4000". Returns a number, or null if blank, or NaN if unreadable.
+  function parseAmount(raw) {
+    if (raw === null || raw === undefined) return null;
+    if (typeof raw === "number") return isFinite(raw) ? raw : NaN;
+    var s = String(raw).toLowerCase().replace(/₹|rs\.?|inr|,|\s/g, "");
+    if (!s) return null;
+    var m = s.match(/^(\d+(?:\.\d+)?)(k|thousand|l|lac|lacs|lakh|lakhs|cr|crore|crores)?$/);
+    if (!m) return NaN;
+    var mult = { k: 1e3, thousand: 1e3, l: 1e5, lac: 1e5, lacs: 1e5, lakh: 1e5, lakhs: 1e5, cr: 1e7, crore: 1e7, crores: 1e7 }[m[2]] || 1;
+    return Math.round(parseFloat(m[1]) * mult);
+  }
+
+  function num(v) { var n = Number(v); return isFinite(n) && n > 0 ? n : 0; }
+  function sum(obj, keys) { return keys.reduce(function (s, k) { return s + num(obj && obj[k]); }, 0); }
+
+  var ASSET_GROUPS = [
+    { id: "bank", label: "Bank & deposits", keys: ["savings", "fd"] },
+    { id: "market", label: "Mutual funds & shares", keys: ["equityMf", "debtMf", "stocks"] },
+    { id: "retirement", label: "Retirement (EPF, PPF, NPS)", keys: ["epf", "ppf", "nps"] },
+    { id: "gold", label: "Gold", keys: ["gold", "sgb"] },
+    { id: "property", label: "Property", keys: ["home", "property"] },
+    { id: "other", label: "Other", keys: ["smallSavings", "other"] }
+  ];
+
+  // Plain-language risk question -> profile. Answers: "sell" | "wait" | "buy"; horizon: "short" | "medium" | "long".
+  function riskFromAnswers(risk) {
+    risk = risk || {};
+    var score = { sell: 0, wait: 1, buy: 2 }[risk.drop];
+    if (score === undefined) return null;
+    if (risk.horizon === "short") score = Math.min(score, 0);
+    else if (risk.horizon === "medium") score = Math.min(score, 1);
+    return ["Conservative", "Balanced", "Aggressive"][score];
+  }
+
+  var GOAL_RETURN = { Conservative: 0.07, Balanced: 0.09, Aggressive: 0.11 };
+  var INFLATION = 0.06;
+
+  // Monthly SIP that grows to `target` in `months` at annual rate r (end-of-month contributions).
+  function sipFor(target, months, r) {
+    if (target <= 0) return 0;
+    if (months <= 0) return target;
+    var i = r / 12;
+    return target * i / (Math.pow(1 + i, months) - 1);
+  }
+
+  function status(value, goodIf, warnIf) { return goodIf(value) ? "good" : warnIf(value) ? "warn" : "bad"; }
+
+  function analyzeProfile(p) {
+    p = p || {};
+    var about = p.about || {}, inc = p.income || {}, sp = p.spending || {}, as = p.assets || {}, ins = p.insurance || {};
+    var loans = (p.loans || []).filter(function (l) { return num(l.outstanding) || num(l.emi); });
+    var goals = (p.goals || []).filter(function (g) { return num(g.amount) && num(g.years); });
+
+    var monthlyIncome = sum(inc, ["salary", "business", "rental", "pension", "interest", "other"]) + num(inc.bonus) / 12;
+    var annualIncome = num(inc.annualGross) || monthlyIncome * 12;
+    var annualIncomeEstimated = !num(inc.annualGross);
+    var monthlySpend = sum(sp, ["household", "rent", "education", "other"]) + num(sp.premiums) / 12;
+    var monthlyEmi = loans.reduce(function (s, l) { return s + num(l.emi); }, 0);
+    var monthlySip = num(sp.sip);
+    var surplus = monthlyIncome - monthlySpend - monthlyEmi - monthlySip;
+    var savingsRate = monthlyIncome ? (monthlyIncome - monthlySpend - monthlyEmi) / monthlyIncome : null;
+
+    var groups = ASSET_GROUPS.map(function (g) { return { id: g.id, label: g.label, value: sum(as, g.keys) }; });
+    var totalAssets = groups.reduce(function (s, g) { return s + g.value; }, 0);
+    var totalLoans = loans.reduce(function (s, l) { return s + num(l.outstanding); }, 0);
+    var netWorth = totalAssets - totalLoans;
+    var financial = totalAssets - sum(as, ["home", "property"]);
+    var equity = sum(as, ["equityMf", "stocks"]);
+    var equityShare = financial ? equity / financial : null;
+    var liquid = sum(as, ["savings", "fd", "debtMf"]);
+    var monthlyNeeds = monthlySpend + monthlyEmi;
+    var emergencyMonths = monthlyNeeds ? liquid / monthlyNeeds : null;
+    var emiRatio = monthlyIncome ? monthlyEmi / monthlyIncome : null;
+    var dependants = num(about.children) + num(about.parents) + (about.spouseDependent === "yes" ? 1 : 0);
+    var lifeCover = sum(ins, ["term", "otherLife"]);
+    var healthCover = sum(ins, ["health", "employerHealth"]);
+    var riskProfile = riskFromAnswers(p.risk) || "Balanced";
+    var regime = about.regime === "Old" ? "Old" : "New";
+    var age = num(about.age) || 40;
+
+    var checks = [];
+    var skippedIns = !!(p.skipped && p.skipped.insurance);
+    if (monthlyNeeds) checks.push({
+      id: "emergency", title: "Emergency fund",
+      status: status(emergencyMonths, function (v) { return v >= 6; }, function (v) { return v >= 3; }),
+      value: emergencyMonths.toFixed(1) + " months",
+      detail: "Cash, FDs and debt funds cover " + emergencyMonths.toFixed(1) + " months of spending and EMIs. Aim for at least 6."
+    });
+    if (monthlyIncome && monthlyEmi) checks.push({
+      id: "emi", title: "Loan EMIs vs income",
+      status: status(emiRatio, function (v) { return v <= 0.35; }, function (v) { return v <= 0.5; }),
+      value: Math.round(emiRatio * 100) + "% of income",
+      detail: "EMIs take " + Math.round(emiRatio * 100) + "% of monthly income. Below 35% is comfortable; above 50% leaves little room."
+    });
+    var costly = loans.filter(function (l) { return l.type === "Credit card" || num(l.rate) >= 12; });
+    if (loans.length) checks.push({
+      id: "costly", title: "Expensive debt",
+      status: costly.length ? "bad" : "good",
+      value: costly.length ? costly.length + " loan" + (costly.length > 1 ? "s" : "") : "None",
+      detail: costly.length ? "Credit card dues or loans at 12%+ interest: " + costly.map(function (l) { return l.type; }).join(", ") +
+        ". Paying these off usually beats any investment return." : "No credit card dues or loans at 12% or more."
+    });
+    if (annualIncome && !skippedIns) {
+      var mult = lifeCover / annualIncome;
+      var needsCover = dependants > 0 || loans.some(function (l) { return l.type === "Home"; });
+      checks.push({
+        id: "life", title: "Life cover",
+        status: needsCover ? status(mult, function (v) { return v >= 10; }, function (v) { return v >= 5; }) : "na",
+        value: lifeCover ? mult.toFixed(1) + "x yearly income" : "None",
+        detail: needsCover ? "Rule of thumb: term cover of about 10x yearly income when family or a home loan depends on you." :
+          "No dependants or home loan entered, so life cover is optional for now."
+      });
+    }
+    if (skippedIns) checks.push({ id: "health", title: "Health cover", status: "na", value: "Skipped",
+      detail: "Insurance was skipped. Add your health and term cover to check them." });
+    else checks.push({
+      id: "health", title: "Health cover",
+      status: status(healthCover, function (v) { return v >= 1000000; }, function (v) { return v >= 500000; }),
+      value: healthCover ? inr(healthCover) : "None",
+      detail: (num(ins.employerHealth) && !num(ins.health) ? "Only employer cover entered; it ends if you change or leave your job. " : "") +
+        "Rule of thumb: at least \u20B910 lakh of family health cover."
+    });
+    if (monthlyIncome && monthlyNeeds) checks.push({
+      id: "savings", title: "Savings rate",
+      status: status(savingsRate, function (v) { return v >= 0.2; }, function (v) { return v >= 0.1; }),
+      value: Math.round(savingsRate * 100) + "%",
+      detail: "You keep " + Math.round(savingsRate * 100) + "% of income after spending and EMIs. 20% or more builds wealth steadily."
+    });
+    var targetEquity = BASE[riskProfile].equity - clamp((age - 40) * 0.3, -10, 10);
+    if (financial) checks.push({
+      id: "mix", title: "Equity in investments",
+      status: Math.abs(equityShare * 100 - targetEquity) <= 15 ? "good" : "warn",
+      value: Math.round(equityShare * 100) + "% (guide " + Math.round(targetEquity) + "%)",
+      detail: "Mutual funds and shares are " + Math.round(equityShare * 100) + "% of your investments (excluding property). For a " +
+        riskProfile.toLowerCase() + " investor aged " + age + ", about " + Math.round(targetEquity) + "% is a common guide."
+    });
+
+    var r = GOAL_RETURN[riskProfile];
+    var goalRows = goals.map(function (g) {
+      var years = num(g.years), months = years * 12;
+      var rate = years <= 3 ? 0.065 : r;
+      var futureCost = num(g.amount) * Math.pow(1 + INFLATION, years);
+      var savedFuture = num(g.saved) * Math.pow(1 + rate, years);
+      var gap = Math.max(0, futureCost - savedFuture);
+      return { name: g.name || g.type, type: g.type, years: years, amount: num(g.amount), saved: num(g.saved),
+        futureCost: Math.round(futureCost), monthlyNeeded: Math.round(sipFor(gap, months, rate)), rate: rate };
+    });
+    var goalSip = goalRows.reduce(function (s, g) { return s + g.monthlyNeeded; }, 0);
+    if (goalRows.length) checks.push({
+      id: "goals", title: "Goals funded",
+      status: goalSip <= monthlySip + Math.max(0, surplus) ? "good" : goalSip <= monthlySip + Math.max(0, surplus) * 1.5 ? "warn" : "bad",
+      value: inr(goalSip) + "/month needed",
+      detail: "Your goals need about " + inr(goalSip) + " a month. You invest " + inr(monthlySip) + " and have " + inr(Math.max(0, surplus)) + " left over each month."
+    });
+
+    var investable = Math.max(0, Math.round(surplus));
+    var split = buildPortfolio({ name: about.name || "You", age: clamp(age, 18, 90), income: annualIncome, corpus: investable || 100,
+      risk: riskProfile, regime: regime });
+
+    return {
+      monthlyIncome: monthlyIncome, annualIncome: annualIncome, annualIncomeEstimated: annualIncomeEstimated,
+      monthlySpend: monthlySpend, monthlyEmi: monthlyEmi, monthlySip: monthlySip, surplus: surplus, savingsRate: savingsRate,
+      groups: groups, totalAssets: totalAssets, totalLoans: totalLoans, netWorth: netWorth, liquid: liquid,
+      emergencyMonths: emergencyMonths, lifeCover: lifeCover, healthCover: healthCover, dependants: dependants,
+      riskProfile: riskProfile, regime: regime, checks: checks, goals: goalRows, goalSip: goalSip,
+      investable: investable, split: split, loans: loans,
+      alerts: checks.filter(function (c) { return c.status === "bad"; }).length
+    };
+  }
+
   function fmt(n) { return Math.round(n).toLocaleString("en-IN"); }
 
   // Indian-style compact currency: Rs 12.5 Cr / Rs 45.0 L
@@ -287,27 +487,231 @@ ul{padding-left:18px;margin:0}
     return "₹" + fmt(n);
   }
 
-  var api = { buildPortfolio: buildPortfolio, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
+  var api = { buildPortfolio: buildPortfolio, analyzeProfile: analyzeProfile, parseAmount: parseAmount, sipFor: sipFor, ASSET_GROUPS: ASSET_GROUPS, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== "undefined" ? window : this);
 </script>
 <script>
-/* File exports: PDF proposal (jsPDF) and Excel client book (SheetJS). Libraries are looked up at
-   click time so a slow or fallback CDN load never breaks the rest of the app. */
+/* Guided-setup questions. Data only: app.js renders these, engine.js reads the answers.
+   Field types: text | count | amount | choice. `per` labels amounts as monthly or yearly. */
+(function (root) {
+  "use strict";
+
+  var STEPS = [
+    {
+      id: "about", title: "About you", intro: "A few basics so the numbers make sense for your stage of life.",
+      fields: [
+        { key: "name", label: "Your full name", type: "text", required: true, placeholder: "e.g. Sunita Sharma" },
+        { key: "age", label: "Your age", type: "count", required: true, min: 18, max: 100 },
+        { key: "city", label: "City you live in", type: "text", placeholder: "e.g. Jaipur" },
+        { key: "occupation", label: "What do you do?", type: "choice",
+          options: ["Salaried", "Business owner", "Self-employed professional", "Retired", "Homemaker", "Other"] },
+        { key: "spouseDependent", label: "Does your spouse depend on your income?", type: "choice",
+          options: [["yes", "Yes"], ["no", "No"], ["na", "Not married"]] },
+        { key: "children", label: "Children who depend on you", type: "count", min: 0, max: 10 },
+        { key: "parents", label: "Parents who depend on you", type: "count", min: 0, max: 4 },
+        { key: "regime", label: "Income tax regime you file under", type: "choice",
+          options: [["New", "New regime"], ["Old", "Old regime"], ["NotSure", "Not sure"]],
+          hint: "If you are not sure, we assume the new regime, which is the default." }
+      ]
+    },
+    {
+      id: "income", title: "Money coming in", intro: "Enter what reaches your bank account. Leave anything that does not apply blank.",
+      fields: [
+        { key: "salary", label: "Salary, in hand", type: "amount", per: "month" },
+        { key: "business", label: "Business or professional income", type: "amount", per: "month" },
+        { key: "rental", label: "Rent you receive", type: "amount", per: "month" },
+        { key: "pension", label: "Pension", type: "amount", per: "month" },
+        { key: "interest", label: "Interest and dividends", type: "amount", per: "month", hint: "A rough monthly average is fine." },
+        { key: "other", label: "Any other regular income", type: "amount", per: "month" },
+        { key: "bonus", label: "Yearly bonus or incentive", type: "amount", per: "year" },
+        { key: "annualGross", label: "Total yearly income before tax", type: "amount", per: "year",
+          hint: "From Form 16 or your ITR. Used only to estimate your tax bracket. Leave blank if unsure." }
+      ]
+    },
+    {
+      id: "spending", title: "Money going out", intro: "Typical monthly amounts. Do not include loan EMIs here; we ask about loans later.",
+      fields: [
+        { key: "household", label: "Household expenses", type: "amount", per: "month", hint: "Groceries, bills, fuel, domestic help, eating out." },
+        { key: "rent", label: "Rent you pay", type: "amount", per: "month" },
+        { key: "education", label: "School or college fees", type: "amount", per: "month", hint: "Yearly fees divided by 12." },
+        { key: "other", label: "Other regular spending", type: "amount", per: "month" },
+        { key: "premiums", label: "Insurance premiums", type: "amount", per: "year", hint: "Health, term and LIC premiums together." },
+        { key: "sip", label: "SIPs, RDs or other monthly investments", type: "amount", per: "month" }
+      ]
+    },
+    {
+      id: "assets", title: "What you own", intro: "Today's approximate value of each. Blank means you don't have it.",
+      groups: [
+        { title: "Bank", fields: [
+          { key: "savings", label: "Savings and current account balance", type: "amount" },
+          { key: "fd", label: "Fixed deposits and RDs", type: "amount" } ] },
+        { title: "Investments", fields: [
+          { key: "equityMf", label: "Equity mutual funds", type: "amount", hint: "Current value from your app or CAS statement." },
+          { key: "debtMf", label: "Debt or liquid mutual funds", type: "amount" },
+          { key: "stocks", label: "Shares in a demat account", type: "amount" } ] },
+        { title: "Retirement", fields: [
+          { key: "epf", label: "EPF / VPF balance", type: "amount", hint: "Check the EPFO passbook or UMANG app." },
+          { key: "ppf", label: "PPF balance", type: "amount" },
+          { key: "nps", label: "NPS balance", type: "amount" } ] },
+        { title: "Gold", fields: [
+          { key: "gold", label: "Gold jewellery and coins", type: "amount", hint: "Grams you own times today's gold rate per gram." },
+          { key: "sgb", label: "Sovereign Gold Bonds or gold funds", type: "amount" } ] },
+        { title: "Property", fields: [
+          { key: "home", label: "Home you live in", type: "amount" },
+          { key: "property", label: "Other property or land", type: "amount" } ] },
+        { title: "Other", fields: [
+          { key: "smallSavings", label: "Post office schemes (NSC, KVP, SCSS, Sukanya)", type: "amount" },
+          { key: "other", label: "Anything else of value", type: "amount", hint: "Business stake, ESOPs, money lent to others." } ] }
+      ]
+    },
+    {
+      id: "loans", title: "What you owe", intro: "Add each loan or credit card balance. If you have none, choose \"I have no loans\".",
+      list: { key: "loans", noneLabel: "I have no loans", addLabel: "Add a loan", itemTitle: "Loan",
+        fields: [
+          { key: "type", label: "Type of loan", type: "choice",
+            options: ["Home", "Car", "Personal", "Education", "Gold", "Against property", "Business", "Credit card", "Other"] },
+          { key: "outstanding", label: "Amount still to repay", type: "amount" },
+          { key: "emi", label: "EMI", type: "amount", per: "month" },
+          { key: "rate", label: "Interest rate (% a year)", type: "count", min: 0, max: 60, step: "0.1" },
+          { key: "yearsLeft", label: "Years left", type: "count", min: 0, max: 40 }
+        ] }
+    },
+    {
+      id: "insurance", title: "Insurance", intro: "The amount you are covered for, not the premium.",
+      fields: [
+        { key: "term", label: "Term life insurance cover", type: "amount" },
+        { key: "otherLife", label: "Other life cover (LIC, endowment, ULIP)", type: "amount" },
+        { key: "health", label: "Health insurance you bought yourself", type: "amount", hint: "Family floater cover amount." },
+        { key: "employerHealth", label: "Health cover from your employer", type: "amount" }
+      ]
+    },
+    {
+      id: "goals", title: "Your goals", intro: "What are you saving for? Enter the cost in today's money; we adjust for inflation.",
+      list: { key: "goals", noneLabel: "Skip goals for now", addLabel: "Add a goal", itemTitle: "Goal",
+        fields: [
+          { key: "type", label: "Goal", type: "choice",
+            options: ["Retirement", "Child's education", "Child's wedding", "Buy a home", "Buy a car", "Travel", "Other"] },
+          { key: "name", label: "Short name (optional)", type: "text", placeholder: "e.g. Riya's engineering" },
+          { key: "amount", label: "Cost in today's money", type: "amount" },
+          { key: "years", label: "Years from now", type: "count", min: 1, max: 50 },
+          { key: "saved", label: "Already set aside for it", type: "amount" }
+        ] }
+    },
+    {
+      id: "risk", title: "How you feel about risk", intro: "Two quick questions. There are no wrong answers.",
+      fields: [
+        { key: "drop", label: "Your ₹10 lakh investment falls to ₹8 lakh in a bad year. What would you do?", type: "choice",
+          options: [["sell", "Sell to stop further loss"], ["wait", "Wait for it to recover"], ["buy", "Invest more while prices are low"]] },
+        { key: "horizon", label: "When will you need most of your invested money?", type: "choice",
+          options: [["short", "Within 3 years"], ["medium", "In 3 to 7 years"], ["long", "After 7 years or more"]] }
+      ]
+    }
+  ];
+
+  function fieldsOf(step) {
+    if (step.fields) return step.fields;
+    if (step.groups) return step.groups.reduce(function (a, g) { return a.concat(g.fields); }, []);
+    return [];
+  }
+
+  root.Questions = { STEPS: STEPS, fieldsOf: fieldsOf };
+})(typeof window !== "undefined" ? window : this);
+</script>
+<script>
+/* Storage adapter. Phase 1 keeps everything in this browser's localStorage; a later live-sync
+   backend replaces this module behind the same function names. Every access is wrapped because
+   storage can be blocked (private mode, sandboxed previews). */
+(function (root) {
+  "use strict";
+  var KEYS = { mine: "bwn.myProfile.v1", family: "bwn.family.v1", hide: "bwn.hideFamily.v1" };
+  var FORMAT = "bharatwealth-nexus/profile";
+
+  function read(key, fallback) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+  function write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
+  function remove(key) { try { localStorage.removeItem(key); } catch (e) { /* ignore */ } }
+
+  function uid() {
+    if (root.crypto && root.crypto.randomUUID) return root.crypto.randomUUID();
+    return "p-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function newProfile() {
+    var now = new Date().toISOString();
+    return { id: uid(), version: 1, createdAt: now, updatedAt: now, consentAt: null, completedAt: null, step: 0,
+      about: {}, income: {}, spending: {}, assets: {}, loans: [], insurance: {}, goals: [], risk: {}, skipped: {} };
+  }
+
+  // ---- This device's own profile ----
+  function loadMine() { return read(KEYS.mine, null); }
+  function saveMine(p) { p.updatedAt = new Date().toISOString(); return write(KEYS.mine, p); }
+  function clearMine() { remove(KEYS.mine); }
+
+  // ---- Profiles the advisor imported (keyed by profile id; a newer import replaces the older one) ----
+  function listFamily() { return read(KEYS.family, []); }
+  function upsertFamily(p) {
+    var list = listFamily(), i = list.findIndex(function (x) { return x.id === p.id; });
+    var entry = Object.assign({}, p, { importedAt: new Date().toISOString() });
+    var replaced = i >= 0;
+    if (replaced) {
+      if (list[i].updatedAt && p.updatedAt && list[i].updatedAt > p.updatedAt) return { ok: false, reason: "older" };
+      list[i] = entry;
+    } else list.push(entry);
+    return { ok: write(KEYS.family, list), replaced: replaced };
+  }
+  function deleteFamily(id) { write(KEYS.family, listFamily().filter(function (x) { return x.id !== id; })); }
+  function getFamily(id) { return listFamily().find(function (x) { return x.id === id; }) || null; }
+
+  function isFamilyHidden() { return read(KEYS.hide, false) === true; }
+  function setFamilyHidden(v) { write(KEYS.hide, !!v); }
+
+  // ---- Transfer format: JSON file, or a text code that survives WhatsApp ----
+  function envelope(p) { return { format: FORMAT, exportedAt: new Date().toISOString(), profile: p }; }
+  function toJson(p) { return JSON.stringify(envelope(p), null, 2); }
+  function toCode(p) {
+    var bytes = new TextEncoder().encode(JSON.stringify(envelope(p)));
+    var bin = ""; bytes.forEach(function (b) { bin += String.fromCharCode(b); });
+    return "BWN1:" + btoa(bin);
+  }
+  // Accepts JSON text or a BWN1 code. Returns {profile} or {error}.
+  function parseTransfer(text) {
+    text = String(text || "").trim();
+    var obj;
+    try {
+      if (text.indexOf("BWN1:") === 0) {
+        var bin = atob(text.slice(5).replace(/\s/g, ""));
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        obj = JSON.parse(new TextDecoder().decode(bytes));
+      } else obj = JSON.parse(text);
+    } catch (e) { return { error: "This doesn't look like a BharatWealth profile. Ask for the file again." }; }
+    if (!obj || obj.format !== FORMAT || !obj.profile || !obj.profile.id) return { error: "This file is not a BharatWealth profile." };
+    return { profile: obj.profile };
+  }
+
+  var api = { newProfile: newProfile, loadMine: loadMine, saveMine: saveMine, clearMine: clearMine,
+    listFamily: listFamily, upsertFamily: upsertFamily, deleteFamily: deleteFamily, getFamily: getFamily,
+    isFamilyHidden: isFamilyHidden, setFamilyHidden: setFamilyHidden, toJson: toJson, toCode: toCode, parseTransfer: parseTransfer, FORMAT: FORMAT };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Store = api;
+})(typeof window !== "undefined" ? window : this);
+</script>
+<script>
+/* File exports: personal PDF report (jsPDF), Excel workbook (SheetJS), profile transfer file, and import.
+   Libraries are looked up at click time so a slow or fallback CDN load never breaks the rest of the app. */
 (function () {
   "use strict";
 
   // Hosted on claude.ai the page must ask the viewer to save through the `downloads` capability;
-  // opened as a local file, a normal browser download works.
+  // anywhere else a normal browser download works.
   async function saveFile(filename, blob) {
     if (window.claude && typeof window.claude.use === "function") {
       var downloads = await window.claude.use("downloads");
       if (downloads) {
-        try { await downloads.save({ filename: filename, data: blob }); return "Saved " + filename + "."; }
+        try { await downloads.save({ filename: filename, data: blob }); return { ok: true, msg: "Saved " + filename + "." }; }
         catch (e) {
-          if (e && e.code === "declined") return "Download cancelled.";
-          if (e && e.code === "rate_limited") return "A save prompt is already open. Finish it, then try again.";
-          return "Downloads are not available in this view.";
+          if (e && e.code === "declined") return { ok: false, msg: "Download cancelled." };
+          if (e && e.code === "rate_limited") return { ok: false, msg: "A save prompt is already open. Finish it, then try again." };
+          return { ok: false, unavailable: true, msg: "Downloads are not available here. Use \"Copy as text\" instead." };
         }
       }
     }
@@ -315,112 +719,670 @@ ul{padding-left:18px;margin:0}
     var a = document.createElement("a");
     a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
-    return "Downloaded " + filename + ".";
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    return { ok: true, msg: "Downloaded " + filename + "." };
   }
 
-  function slug(s) { return String(s).trim().replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "client"; }
-  // Standard PDF fonts have no rupee glyph.
-  function pdfText(s) { return String(s).replace(/₹\s?/g, "Rs "); }
-  function today() { return new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
+  function slug(s) { return String(s || "").trim().replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "profile"; }
+  function pdfText(s) { return String(s).replace(/₹\s?/g, "Rs "); } // standard PDF fonts have no rupee glyph
+  function dateIN(iso) { return (iso ? new Date(iso) : new Date()).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
+  var inr = function (n) { return Engine.inr(Math.round(n || 0)); };
+  var STATUS = { good: "Good", warn: "Needs attention", bad: "Act now", na: "Not applicable" };
+  var STATUS_RGB = { good: [12, 130, 12], warn: [176, 116, 0], bad: [208, 59, 59], na: [110, 110, 110] };
 
-  function proposalPdf(input, result) {
-    if (!window.jspdf) throw new Error("The PDF library has not loaded. Check your internet connection and reload.");
+  // ---------- PDF report ----------
+  function reportPdf(p, a) {
+    if (!window.jspdf) throw new Error("The PDF tool has not loaded. Check your internet connection and reload the page.");
     var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
-    var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 48, y = M;
-    var ink = [24, 34, 31], mute = [93, 106, 101], teal = [15, 107, 90];
+    var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 44, y;
+    var ink = [24, 34, 31], mute = [93, 106, 101], teal = [15, 107, 90], line = [221, 227, 223];
+    var name = (p.about && p.about.name) || "Your";
 
-    function para(text, size, color, style) {
+    function header() {
+      doc.setFillColor(15, 59, 51); doc.rect(0, 0, W, 58, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(255, 255, 255); doc.text("BharatWealth Nexus", M, 36);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+      doc.text("Wealth report  |  " + dateIN(), W - M, 36, { align: "right" });
+      y = 88;
+    }
+    function ensure(h) { if (y + h > H - M) { doc.addPage(); header(); } }
+    function text(t, size, color, style, x, opts) {
       doc.setFont("helvetica", style || "normal"); doc.setFontSize(size); doc.setTextColor.apply(doc, color || ink);
-      var lines = doc.splitTextToSize(pdfText(text), W - 2 * M);
-      if (y + lines.length * size * 1.35 > H - M) { doc.addPage(); y = M; }
-      doc.text(lines, M, y); y += lines.length * size * 1.35;
+      var lines = doc.splitTextToSize(pdfText(t), (opts && opts.width) || (W - 2 * M));
+      ensure(lines.length * size * 1.35);
+      doc.text(lines, x || M, y); y += lines.length * size * 1.35;
+    }
+    function heading(t) { y += 10; ensure(40); text(t, 12.5, teal, "bold"); y += 2; }
+    // cols: [{label, width, align}] widths in fractions of content width
+    function table(cols, rows, opts) {
+      var cw = W - 2 * M, xs = [], x = M;
+      cols.forEach(function (c) { xs.push(x); x += c.width * cw; });
+      function row(cells, bold, color) {
+        var wrapped = cells.map(function (c, i) { return doc.splitTextToSize(pdfText(c), cols[i].width * cw - 8); });
+        var h = Math.max.apply(null, wrapped.map(function (w) { return w.length; })) * 12 + 8;
+        ensure(h);
+        doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(bold ? 8 : 9.5);
+        wrapped.forEach(function (w, i) {
+          var col = cols[i], c = (color && color[i]) || (bold ? mute : ink);
+          doc.setTextColor.apply(doc, c);
+          if (col.align === "right") doc.text(w, xs[i] + col.width * cw - 4, y + 10, { align: "right" });
+          else doc.text(w, xs[i], y + 10);
+        });
+        y += h; doc.setDrawColor.apply(doc, line); doc.line(M, y - 3, W - M, y - 3);
+      }
+      row(cols.map(function (c) { return c.label.toUpperCase(); }), true);
+      rows.forEach(function (r) { row(r.cells || r, false, r.colors); });
+      if (opts && opts.total) row(opts.total, true);
+      y += 4;
     }
 
-    doc.setFillColor(15, 59, 51); doc.rect(0, 0, W, 64, "F");
-    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(255, 255, 255);
-    doc.text("BharatWealth Nexus", M, 40);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-    doc.text("Portfolio Proposal  |  " + today(), W - M, 40, { align: "right" });
-    y = 98;
+    header();
+    text(name + (name === "Your" ? " wealth report" : ""), 18, ink, "bold"); y += 2;
+    var ab = p.about || {};
+    text([ab.age ? "Age " + ab.age : "", ab.city, ab.occupation, a.riskProfile + " investor", a.regime + " tax regime",
+      "Last updated " + dateIN(p.updatedAt)].filter(Boolean).join("  |  "), 9.5, mute);
+    y += 10;
 
-    para("Prepared for " + input.name.trim(), 16, ink, "bold"); y += 4;
-    para("Age " + input.age + "  |  Annual income " + Engine.inr(input.income) + "  |  Corpus " + Engine.inr(input.corpus) +
-      "  |  " + input.risk + " risk  |  " + input.regime + " tax regime", 10, mute);
-    y += 14;
-
-    // Allocation bar
-    var x = M, barW = W - 2 * M;
-    result.lines.forEach(function (l) {
-      var w = barW * l.pct / 100; doc.setFillColor.apply(doc, PDF_COLORS[l.name] || teal); doc.rect(x, y, w, 12, "F"); x += w;
+    // KPI strip
+    var kpis = [["Net worth", inr(a.netWorth)], ["Monthly surplus", inr(a.surplus)], ["Total loans", inr(a.totalLoans)],
+      ["Emergency fund", a.emergencyMonths === null ? "-" : a.emergencyMonths.toFixed(1) + " months"]];
+    var kw = (W - 2 * M - 3 * 10) / 4;
+    ensure(56);
+    kpis.forEach(function (k, i) {
+      var x = M + i * (kw + 10);
+      doc.setDrawColor.apply(doc, line); doc.roundedRect(x, y, kw, 48, 4, 4, "S");
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor.apply(doc, mute); doc.text(k[0].toUpperCase(), x + 8, y + 15);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12.5); doc.setTextColor.apply(doc, ink); doc.text(pdfText(k[1]), x + 8, y + 36);
     });
-    y += 30;
+    y += 62;
 
-    // Allocation table
-    var cols = [M, M + 110, W - M - 120, W - M];
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor.apply(doc, mute);
-    doc.text("ASSET CLASS", cols[0], y); doc.text("INSTRUMENT", cols[1], y);
-    doc.text("WEIGHT", cols[2], y, { align: "right" }); doc.text("AMOUNT", cols[3], y, { align: "right" });
-    y += 8; doc.setDrawColor(221, 227, 223); doc.line(M, y, W - M, y); y += 16;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor.apply(doc, ink);
-    result.lines.forEach(function (l) {
-      doc.setFillColor.apply(doc, PDF_COLORS[l.name] || teal); doc.rect(cols[1] - 12, y - 7, 7, 7, "F");
-      doc.text(l.cls, cols[0], y); doc.text(l.name, cols[1], y);
-      doc.text(l.pct + "%", cols[2], y, { align: "right" }); doc.text(pdfText(Engine.inr(l.amount)), cols[3], y, { align: "right" });
-      y += 20;
-    });
-    doc.line(M, y - 10, W - M, y - 10); y += 16;
+    heading("Health check");
+    table([{ label: "Area", width: .22 }, { label: "Status", width: .16 }, { label: "Where you are", width: .2 }, { label: "What it means", width: .42 }],
+      a.checks.map(function (c) { return { cells: [c.title, STATUS[c.status], c.value, c.detail], colors: [null, STATUS_RGB[c.status]] }; }));
 
-    if (result.taxInsight) {
-      para("Tax efficiency: Arbitrage Funds vs Fixed Deposits", 12, teal, "bold"); y += 2;
-      para(result.taxInsight.text, 10); y += 12;
+    heading("Monthly cash flow");
+    table([{ label: "Item", width: .7 }, { label: "Per month", width: .3, align: "right" }], [
+      ["Income (including bonus spread over 12 months)", inr(a.monthlyIncome)], ["Spending (including insurance premiums)", "- " + inr(a.monthlySpend)],
+      ["Loan EMIs", "- " + inr(a.monthlyEmi)], ["Existing SIPs and RDs", "- " + inr(a.monthlySip)]
+    ], { total: ["Left over", inr(a.surplus)] });
+
+    heading("What you own");
+    table([{ label: "Category", width: .55 }, { label: "Value", width: .25, align: "right" }, { label: "Share", width: .2, align: "right" }],
+      a.groups.filter(function (g) { return g.value; }).map(function (g) {
+        return [g.label, inr(g.value), Math.round(g.value / a.totalAssets * 100) + "%"];
+      }), { total: ["Total assets", inr(a.totalAssets), "100%"] });
+
+    if (a.loans.length) {
+      heading("What you owe");
+      table([{ label: "Loan", width: .26 }, { label: "Outstanding", width: .22, align: "right" }, { label: "EMI", width: .18, align: "right" },
+        { label: "Rate", width: .14, align: "right" }, { label: "Years left", width: .2, align: "right" }],
+        a.loans.map(function (l) { return [l.type || "Loan", inr(l.outstanding), inr(l.emi), l.rate ? l.rate + "%" : "-", l.yearsLeft || "-"]; }),
+        { total: ["Total", inr(a.totalLoans), inr(a.monthlyEmi), "", ""] });
     }
-    para("Notes", 12, teal, "bold"); y += 2;
-    result.notes.forEach(function (n) { para("- " + n, 10); y += 2; });
-    y += 14;
-    para("Illustrative proposal generated from mock assumptions. Tax rates are indicative for FY 2025-26 and ignore surcharge and " +
-      "deductions other than the standard deduction. Not investment, tax or legal advice. Mutual fund investments are subject to " +
-      "market risks; read all scheme-related documents carefully.", 8, mute);
 
-    return { filename: "Proposal-" + slug(input.name) + ".pdf", blob: doc.output("blob") };
+    var insr = p.insurance || {};
+    if (!(p.skipped && p.skipped.insurance)) {
+      heading("Insurance");
+      table([{ label: "Cover", width: .7 }, { label: "Amount", width: .3, align: "right" }], [
+        ["Term life", inr(insr.term)], ["Other life (LIC, endowment, ULIP)", inr(insr.otherLife)],
+        ["Health, own policy", inr(insr.health)], ["Health, from employer", inr(insr.employerHealth)]]);
+    }
+
+    if (a.goals.length) {
+      heading("Goals");
+      table([{ label: "Goal", width: .26 }, { label: "Years", width: .1, align: "right" }, { label: "Cost today", width: .2, align: "right" },
+        { label: "Cost then", width: .2, align: "right" }, { label: "Monthly SIP needed", width: .24, align: "right" }],
+        a.goals.map(function (g) { return [g.name, String(g.years), inr(g.amount), inr(g.futureCost), inr(g.monthlyNeeded)]; }),
+        { total: ["Total", "", "", "", inr(a.goalSip)] });
+      var longGoal = a.goals.find(function (g) { return g.years > 3; });
+      text("Costs grow at 6% a year for inflation. Assumed returns: 6.5% for goals within 3 years" +
+        (longGoal ? ", " + Math.round(longGoal.rate * 100) + "% for longer goals (" + a.riskProfile.toLowerCase() + " investor)." : "."), 8.5, mute);
+    }
+
+    heading("Where to put your monthly surplus");
+    text(a.investable ? "Suggested split of the " + inr(a.investable) + " you have left each month:" :
+      "You have no surplus left each month right now. This is the split to use once you do:", 9.5);
+    y += 4;
+    table([{ label: "Asset class", width: .25 }, { label: "Fund type", width: .45 }, { label: "Share", width: .12, align: "right" },
+      { label: "Per month", width: .18, align: "right" }],
+      a.split.lines.map(function (l) { return [l.cls, l.name, l.pct + "%", a.investable ? inr(a.investable * l.pct / 100) : "-"]; }));
+    if (a.split.taxInsight) { y += 2; text(a.split.taxInsight.text, 9); }
+
+    y += 12;
+    text("This report is generated from the figures entered and simple rules of thumb. It is not investment, tax or legal advice. " +
+      "Tax rates are indicative for FY 2025-26. Mutual fund investments are subject to market risks; read all scheme-related documents carefully.", 7.5, mute);
+
+    return { filename: "Wealth-Report-" + slug(name) + ".pdf", blob: doc.output("blob") };
   }
 
-  var PDF_COLORS = {
-    "Nifty 50 Index Fund": [15, 107, 90], "Nifty Next 50 Index Fund": [95, 174, 155], "Short-Term Debt Fund": [52, 80, 143],
-    "Arbitrage Fund": [138, 164, 221], "Sovereign Gold Bonds (SGB)": [184, 137, 43]
-  };
+  // ---------- Excel workbook ----------
+  var DATA_SHEET = "_profile_data";
+  function reportXlsx(p, a) {
+    if (!window.XLSX) throw new Error("The Excel tool has not loaded. Check your internet connection and reload the page.");
+    var X = window.XLSX, wb = X.utils.book_new(), ab = p.about || {};
+    function sheet(name, aoa, widths) {
+      var ws = X.utils.aoa_to_sheet(aoa); ws["!cols"] = (widths || []).map(function (w) { return { wch: w }; });
+      X.utils.book_append_sheet(wb, ws, name);
+    }
+    sheet("Summary", [
+      ["BharatWealth Nexus - Wealth report"], ["Name", ab.name || ""], ["Age", ab.age || ""], ["City", ab.city || ""],
+      ["Risk profile", a.riskProfile], ["Tax regime", a.regime], ["Last updated", dateIN(p.updatedAt)], [],
+      ["Net worth (INR)", Math.round(a.netWorth)], ["Total assets (INR)", Math.round(a.totalAssets)], ["Total loans (INR)", Math.round(a.totalLoans)],
+      ["Monthly income (INR)", Math.round(a.monthlyIncome)], ["Monthly spending (INR)", Math.round(a.monthlySpend)],
+      ["Monthly EMIs (INR)", Math.round(a.monthlyEmi)], ["Monthly SIPs (INR)", Math.round(a.monthlySip)], ["Monthly surplus (INR)", Math.round(a.surplus)],
+      [], ["Health check", "Status", "Where you are", "What it means"]
+    ].concat(a.checks.map(function (c) { return [c.title, STATUS[c.status], c.value.replace(/₹/g, "Rs "), c.detail.replace(/₹/g, "Rs ")]; })),
+      [26, 18, 22, 90]);
 
+    var inc = p.income || {}, sp = p.spending || {}, as = p.assets || {}, insr = p.insurance || {};
+    function rowsFor(stepId, obj) {
+      var step = Questions.STEPS.find(function (s) { return s.id === stepId; });
+      return Questions.fieldsOf(step).map(function (f) {
+        return [f.label + (f.per ? " (per " + f.per + ")" : ""), Number(obj[f.key]) || 0];
+      });
+    }
+    sheet("Income", [["Item", "Amount (INR)"]].concat(rowsFor("income", inc)), [46, 16]);
+    sheet("Spending", [["Item", "Amount (INR)"]].concat(rowsFor("spending", sp)), [46, 16]);
+    sheet("Assets", [["Item", "Value (INR)"]].concat(rowsFor("assets", as)).concat([[], ["Total assets", Math.round(a.totalAssets)]]), [46, 16]);
+    sheet("Loans", [["Type", "Outstanding (INR)", "EMI (INR)", "Rate (%)", "Years left"]].concat((p.loans || []).map(function (l) {
+      return [l.type || "", Number(l.outstanding) || 0, Number(l.emi) || 0, Number(l.rate) || 0, Number(l.yearsLeft) || 0];
+    })), [18, 18, 12, 10, 10]);
+    sheet("Insurance", [["Cover", "Amount (INR)"]].concat(rowsFor("insurance", insr)), [46, 16]);
+    sheet("Goals", [["Goal", "Years", "Cost today (INR)", "Cost then (INR)", "Already saved (INR)", "Monthly SIP needed (INR)"]].concat(
+      a.goals.map(function (g) { return [g.name, g.years, g.amount, g.futureCost, g.saved, g.monthlyNeeded]; })), [26, 8, 16, 16, 18, 22]);
+    sheet("Suggested split", [["Asset class", "Fund type", "Share (%)", "Per month (INR)"]].concat(
+      a.split.lines.map(function (l) { return [l.cls, l.name, l.pct, Math.round(a.investable * l.pct / 100)]; })), [16, 30, 10, 16]);
+
+    // Hidden sheet carrying the full profile so this same file can be imported by the advisor.
+    var json = Store.toJson(p), chunks = [];
+    for (var i = 0; i < json.length; i += 30000) chunks.push([json.slice(i, i + 30000)]);
+    X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(chunks), DATA_SHEET);
+    wb.Workbook = { Sheets: wb.SheetNames.map(function (n) { return { Hidden: n === DATA_SHEET ? 1 : 0 }; }) };
+
+    var buf = X.write(wb, { bookType: "xlsx", type: "array" });
+    return { filename: "Wealth-Report-" + slug(ab.name) + ".xlsx",
+      blob: new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) };
+  }
+
+  function profileFile(p) {
+    return { filename: "BharatWealth-Profile-" + slug(p.about && p.about.name) + ".json",
+      blob: new Blob([Store.toJson(p)], { type: "application/json" }) };
+  }
+
+  // Reads a dropped/selected file (.json or the .xlsx above). Resolves {profile} or {error}.
+  function readImportFile(file) {
+    return new Promise(function (resolve) {
+      var isXlsx = /\.xlsx$/i.test(file.name);
+      var fr = new FileReader();
+      fr.onerror = function () { resolve({ error: "Could not read that file." }); };
+      fr.onload = function () {
+        if (!isXlsx) return resolve(Store.parseTransfer(fr.result));
+        if (!window.XLSX) return resolve({ error: "The Excel tool has not loaded. Check your internet connection and reload." });
+        try {
+          var wb = window.XLSX.read(new Uint8Array(fr.result), { type: "array" });
+          var ws = wb.Sheets[DATA_SHEET];
+          if (!ws) return resolve({ error: "This Excel file was not exported from BharatWealth Nexus." });
+          var rows = window.XLSX.utils.sheet_to_json(ws, { header: 1 });
+          resolve(Store.parseTransfer(rows.map(function (r) { return r[0] || ""; }).join("")));
+        } catch (e) { resolve({ error: "Could not read that Excel file." }); }
+      };
+      if (isXlsx) fr.readAsArrayBuffer(file); else fr.readAsText(file);
+    });
+  }
+
+  // ---------- Demo client book (advisor demo tab) ----------
   function clientBookXlsx(clients) {
-    if (!window.XLSX) throw new Error("The Excel library has not loaded. Check your internet connection and reload.");
-    var rows = clients.map(function (c) {
-      return { "Client": c.name, "City": c.city || "", "Age": c.age, "Annual Income (INR)": c.income, "AUM (INR)": c.aum,
-        "Risk Profile": c.risk, "Tax Regime": c.regime, "Source": c.isNew ? "Client Portal" : "Book" };
-    });
-    var total = clients.reduce(function (s, c) { return s + c.aum; }, 0);
-    var ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 6 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 11 }, { wch: 14 }];
-    var summary = XLSX.utils.aoa_to_sheet([
-      ["BharatWealth Nexus - Client Book"], ["Exported", today()], [],
-      ["Total AUM (INR)", total], ["Client count", clients.length], ["Average AUM (INR)", Math.round(total / clients.length)]
-    ]);
-    summary["!cols"] = [{ wch: 22 }, { wch: 18 }];
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, summary, "Summary");
-    XLSX.utils.book_append_sheet(wb, ws, "Clients");
-    var buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    return { filename: "BharatWealth-Client-Book.xlsx", blob: blob };
+    if (!window.XLSX) throw new Error("The Excel tool has not loaded. Check your internet connection and reload the page.");
+    var X = window.XLSX;
+    var ws = X.utils.json_to_sheet(clients.map(function (c) {
+      return { "Client": c.name, "City": c.city, "Age": c.age, "Annual Income (INR)": c.income, "AUM (INR)": c.aum, "Risk Profile": c.risk, "Tax Regime": c.regime };
+    }));
+    ws["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 6 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 11 }];
+    var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Demo clients");
+    return { filename: "BharatWealth-Demo-Client-Book.xlsx",
+      blob: new Blob([X.write(wb, { bookType: "xlsx", type: "array" })], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) };
   }
 
-  window.Exports = { saveFile: saveFile, proposalPdf: proposalPdf, clientBookXlsx: clientBookXlsx };
+  window.Exports = { saveFile: saveFile, reportPdf: reportPdf, reportXlsx: reportXlsx, profileFile: profileFile,
+    readImportFile: readImportFile, clientBookXlsx: clientBookXlsx };
 })();
 </script>
 <script>
-/* UI layer: view switching, state, rendering. Finance logic lives in engine.js, file output in exports.js. */
+/* UI layer: routing, guided setup, dashboards, advisor view. Finance logic lives in engine.js,
+   questions in questions.js, persistence in store.js, files in exports.js.
+   Routes: no hash = the family member's own profile; #advisor = the advisor's view. */
 (function () {
   "use strict";
-  var STORE_KEY = "bwn.clients.v1";
 
+  var ADVISOR = "Bharat"; // shown in the consent text and the share card
+  var STEPS = Questions.STEPS;
+  var app = document.getElementById("app");
+  var tip = document.getElementById("tip");
+
+  // ---------- helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function inr(n) { return Engine.inr(Math.round(n || 0)); }
+  function indian(n) { return n === undefined || n === null || n === "" ? "" : Number(n).toLocaleString("en-IN"); }
+  function dateIN(iso) { return iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-"; }
+  function firstName(p) { return ((p.about && p.about.name) || "").trim().split(/\s+/)[0] || "Your"; }
+  function possessive(name) { return name === "Your" ? "Your" : name + "'s"; }
+  function top() { window.scrollTo(0, 0); }
+
+  // ---------- state ----------
+  var me = null;            // this device's own profile
+  var personalView = null;  // "welcome" | "wizard" | "review" | "dashboard"
+  var stepIdx = 0;
+  var advTab = "family";    // "family" | "demo" | "detail"
+  var detail = null;        // { profile, from }
+
+  function isAdvisor() { return location.hash.replace("#", "") === "advisor"; }
+  function render() { if (isAdvisor()) renderAdvisor(); else renderPersonal(); }
+  window.addEventListener("hashchange", function () { render(); top(); });
+
+  // ---------- tooltip for chart marks ----------
+  document.addEventListener("mousemove", function (e) {
+    var t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute("data-tip"); tip.hidden = false;
+    var x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+    tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+  });
+
+  // =====================================================================
+  // PERSONAL SIDE
+  // =====================================================================
+  function renderPersonal() {
+    me = Store.loadMine();
+    if (!me || !me.consentAt) personalView = "welcome";
+    else if (!personalView || personalView === "welcome") {
+      personalView = me.completedAt ? "dashboard" : "wizard";
+      stepIdx = Math.min(me.step || 0, STEPS.length - 1);
+    }
+    ({ welcome: renderWelcome, wizard: renderWizard, review: renderReview, dashboard: renderOwnDashboard })[personalView]();
+  }
+
+  function topbar(right) {
+    return '<header class="topbar"><div class="topbar-in"><span class="brand">BharatWealth <span>Nexus</span></span>' +
+      '<div class="row">' + (right || "") + "</div></div></header>";
+  }
+
+  // ---------- welcome + consent ----------
+  function renderWelcome() {
+    app.innerHTML = topbar() +
+      '<main class="page narrow welcome"><div class="card">' +
+      '<p class="eyebrow">Your personal wealth check</p>' +
+      "<h1>See your whole financial picture in one place</h1>" +
+      "<p>Answer simple questions about your income, savings, loans and insurance. It takes about 10 minutes. " +
+      "Skip anything that does not apply and come back to it later.</p>" +
+      '<ul class="checklist"><li>Your net worth and where your money sits</li><li>Health checks on emergency savings, loans and insurance</li>' +
+      "<li>How much to invest each month for your goals</li><li>A PDF report and an Excel file you can download</li></ul>" +
+      '<div class="consent"><input type="checkbox" id="consent"><label for="consent"><strong>Everything you enter will be visible to ' + ADVISOR +
+      ".</strong> " + ADVISOR + " set up this tool to help look after your family's finances. Your answers are saved only on this device " +
+      "until you send your profile to " + ADVISOR + " from your dashboard.</label></div>" +
+      '<p class="err-box" id="consent-err" hidden>Tick the box above to continue.</p>' +
+      '<div><button class="btn big" id="start">Start</button></div></div>' +
+      '<p class="note">This tool gives general guidance from the figures you enter. It is not investment, tax or legal advice.</p></main>';
+    $("start").onclick = function () {
+      if (!$("consent").checked) { $("consent-err").hidden = false; return; }
+      me = Store.newProfile(); me.consentAt = new Date().toISOString(); Store.saveMine(me);
+      stepIdx = 0; personalView = "wizard"; render(); top();
+    };
+  }
+
+  // ---------- wizard ----------
+  var saveTimer = null;
+  function saveSoon() {
+    var el = $("saved"); if (el) el.textContent = "Saving...";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      var ok = Store.saveMine(me), s = $("saved");
+      if (s) s.textContent = ok ? "Saved on this device" : "Not saved: this browser blocks storage. Keep this page open.";
+    }, 300);
+  }
+
+  function fieldHtml(f, value, sec, idx) {
+    var id = "f-" + sec + "-" + (idx === "" ? "" : idx + "-") + f.key;
+    var data = ' data-sec="' + sec + '" data-idx="' + idx + '" data-key="' + f.key + '" data-type="' + f.type + '"';
+    var label = esc(f.label) + (f.per ? ' <span class="per">per ' + f.per + "</span>" : "") + (f.required ? "" : "");
+    var input;
+    if (f.type === "choice") {
+      input = '<div class="chips" role="group" aria-label="' + esc(f.label) + '">' + f.options.map(function (o) {
+        var v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o;
+        return '<button type="button" class="chip" id="' + id + "-" + esc(v).replace(/\W/g, "") + '" data-val="' + esc(v) + '"' + data +
+          ' aria-pressed="' + (value === v) + '">' + esc(t) + "</button>";
+      }).join("") + "</div>";
+      return '<div class="field"><span class="label">' + label + "</span>" + input + (f.hint ? '<p class="hint">' + esc(f.hint) + "</p>" : "") + "</div>";
+    }
+    if (f.type === "amount") {
+      input = '<div class="amount-wrap"><span>₹</span><input type="text" inputmode="decimal" autocomplete="off" id="' + id + '"' + data +
+        ' value="' + esc(indian(value)) + '" placeholder="0"></div><p class="echo" id="' + id + '-echo">' + echo(value, f) + "</p>";
+    } else if (f.type === "count") {
+      input = '<input type="number" inputmode="decimal" id="' + id + '"' + data + ' value="' + esc(value === undefined ? "" : value) + '"' +
+        (f.min !== undefined ? ' min="' + f.min + '"' : "") + (f.max !== undefined ? ' max="' + f.max + '"' : "") + ' step="' + (f.step || 1) + '">';
+    } else {
+      input = '<input type="text" id="' + id + '"' + data + ' value="' + esc(value || "") + '" placeholder="' + esc(f.placeholder || "") + '" autocomplete="off">';
+    }
+    return '<div class="field"><label for="' + id + '">' + label + "</label>" + input + (f.hint ? '<p class="hint">' + esc(f.hint) + "</p>" : "") + "</div>";
+  }
+
+  function echo(value, f) {
+    if (value === undefined || value === null || value === "") return "";
+    return "= " + inr(value) + (f.per ? " per " + f.per : "");
+  }
+
+  function stepHtml(step) {
+    var sec = step.id;
+    if (step.list) {
+      var items = me[sec] || [];
+      return items.map(function (it, i) {
+        return '<div class="item"><div class="spread"><h3>' + esc(step.list.itemTitle) + " " + (i + 1) + "</h3>" +
+          '<button type="button" class="btn quiet" data-remove="' + i + '">Remove</button></div>' +
+          step.list.fields.map(function (f) { return fieldHtml(f, it[f.key], sec, i); }).join("") + "</div>";
+      }).join("") + '<div><button type="button" class="btn ghost" id="add-item">+ ' + esc(step.list.addLabel) + "</button></div>";
+    }
+    var vals = me[sec] || {};
+    if (step.groups) return step.groups.map(function (g) {
+      return '<p class="group-title">' + esc(g.title) + "</p>" + g.fields.map(function (f) { return fieldHtml(f, vals[f.key], sec, ""); }).join("");
+    }).join("");
+    return step.fields.map(function (f) { return fieldHtml(f, vals[f.key], sec, ""); }).join("");
+  }
+
+  function renderWizard() {
+    var step = STEPS[stepIdx], last = stepIdx === STEPS.length - 1;
+    var skipLabel = step.id === "about" ? "" : step.list ? step.list.noneLabel : "Skip this step";
+    app.innerHTML = topbar(me.completedAt ? '<button class="btn ghost" id="to-dash">Back to dashboard</button>' : "") +
+      '<main class="page narrow"><div class="progress"><div class="spread"><span class="eyebrow">Step ' + (stepIdx + 1) + " of " + STEPS.length +
+      '</span><span class="saved" id="saved">Saved on this device</span></div>' +
+      '<div class="progress-bar"><div style="width:' + Math.round((stepIdx + 1) / STEPS.length * 100) + '%"></div></div></div>' +
+      '<form class="card" id="wiz" novalidate><h1>' + esc(step.title) + '</h1><p class="mute">' + esc(step.intro) + "</p>" +
+      '<div class="fields" id="fields">' + stepHtml(step) + "</div>" +
+      '<p class="err-box" id="wiz-err" hidden></p>' +
+      '<div class="wiz-nav"><button type="button" class="btn quiet" id="back"' + (stepIdx === 0 ? " hidden" : "") + ">Back</button>" +
+      '<div class="row">' + (skipLabel ? '<button type="button" class="btn ghost" id="skip">' + esc(skipLabel) + "</button>" : "") +
+      '<button type="submit" class="btn" id="next">' + (last ? "Review my answers" : "Save and continue") + "</button></div></div></form></main>";
+
+    var fields = $("fields");
+    fields.addEventListener("input", onFieldInput);
+    fields.addEventListener("focusout", function (e) {
+      var t = e.target;
+      if (t.dataset && t.dataset.type === "amount") { var n = Engine.parseAmount(t.value); if (n !== null && !isNaN(n)) t.value = indian(n); }
+    });
+    fields.addEventListener("click", function (e) {
+      var chip = e.target.closest(".chip");
+      if (chip) {
+        var on = chip.getAttribute("aria-pressed") !== "true";
+        chip.parentNode.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", "false"); });
+        chip.setAttribute("aria-pressed", String(on));
+        setVal(chip.dataset.sec, chip.dataset.idx, chip.dataset.key, on ? chip.dataset.val : null);
+        return;
+      }
+      var rm = e.target.closest("[data-remove]");
+      if (rm) { me[step.id].splice(Number(rm.dataset.remove), 1); saveSoon(); rerenderFields(step); return; }
+      if (e.target.id === "add-item") {
+        me[step.id] = me[step.id] || []; me[step.id].push({}); delete me.skipped[step.id]; saveSoon(); rerenderFields(step);
+        var items = fields.querySelectorAll(".item"); if (items.length) items[items.length - 1].scrollIntoView({ block: "nearest" });
+      }
+    });
+    if ($("to-dash")) $("to-dash").onclick = function () { personalView = "dashboard"; render(); top(); };
+    $("back").onclick = function () { stepIdx--; me.step = stepIdx; saveSoon(); renderWizard(); top(); };
+    if ($("skip")) $("skip").onclick = function () {
+      if (step.id === "loans") { me.loans = []; delete me.skipped.loans; } else me.skipped[step.id] = true;
+      advance();
+    };
+    $("wiz").onsubmit = function (e) {
+      e.preventDefault();
+      var err = validateStep(step);
+      if (err) { $("wiz-err").textContent = err; $("wiz-err").hidden = false; return; }
+      delete me.skipped[step.id];
+      advance();
+    };
+  }
+
+  function rerenderFields(step) { $("fields").innerHTML = stepHtml(step); }
+
+  function onFieldInput(e) {
+    var t = e.target, d = t.dataset;
+    if (!d || !d.key) return;
+    $("wiz-err").hidden = true;
+    var val;
+    if (d.type === "amount") {
+      var n = Engine.parseAmount(t.value), out = $(t.id + "-echo");
+      var f = fieldDef(d.sec, d.key);
+      if (n === null) { val = null; out.textContent = ""; out.className = "echo"; }
+      else if (isNaN(n)) { val = undefined; out.textContent = "Could not read this. Try 45000, 4.5 lakh or 1.2 crore."; out.className = "echo err"; }
+      else { val = n; out.textContent = echo(n, f); out.className = "echo"; }
+      if (val === undefined) return; // keep the last good value until the entry is readable
+    } else if (d.type === "count") val = t.value === "" ? null : Number(t.value);
+    else val = t.value;
+    setVal(d.sec, d.idx, d.key, val);
+  }
+
+  function fieldDef(sec, key) {
+    var step = STEPS.find(function (s) { return s.id === sec; });
+    var list = step.list ? step.list.fields : Questions.fieldsOf(step);
+    return list.find(function (f) { return f.key === key; }) || {};
+  }
+
+  function setVal(sec, idx, key, val) {
+    var target;
+    if (idx === "" || idx === undefined) target = me[sec] = me[sec] || {};
+    else target = me[sec][Number(idx)];
+    if (val === null || val === "" || val === undefined) delete target[key]; else target[key] = val;
+    delete me.skipped[sec];
+    saveSoon();
+  }
+
+  function validateStep(step) {
+    if (document.querySelector("#fields .echo.err")) return "Fix the amounts marked in red, or clear them.";
+    var problems = [];
+    function check(f, v, where) {
+      if (f.required && (v === undefined || v === "" || v === null)) problems.push(f.label + " is needed" + where + ".");
+      if (f.type === "count" && v !== undefined && v !== null && v !== "" &&
+        (isNaN(v) || (f.min !== undefined && v < f.min) || (f.max !== undefined && v > f.max)))
+        problems.push(f.label + where + " should be between " + f.min + " and " + f.max + ".");
+    }
+    if (step.list) (me[step.id] || []).forEach(function (it, i) {
+      step.list.fields.forEach(function (f) { check(f, it[f.key], " (" + step.list.itemTitle.toLowerCase() + " " + (i + 1) + ")"); });
+    });
+    else Questions.fieldsOf(step).forEach(function (f) { check(f, (me[step.id] || {})[f.key], ""); });
+    return problems.join(" ");
+  }
+
+  function advance() {
+    clearTimeout(saveTimer);
+    if (stepIdx < STEPS.length - 1) { stepIdx++; me.step = stepIdx; Store.saveMine(me); renderWizard(); }
+    else { me.step = STEPS.length - 1; Store.saveMine(me); personalView = "review"; renderReview(); }
+    top();
+  }
+
+  // ---------- review ----------
+  function stepSummary(step) {
+    if (me.skipped && me.skipped[step.id]) return { text: "Skipped", done: false };
+    if (step.list) {
+      var n = (me[step.id] || []).length;
+      return { text: n ? n + " " + step.list.itemTitle.toLowerCase() + (n > 1 ? "s" : "") : "None", done: true };
+    }
+    var fs = Questions.fieldsOf(step), vals = me[step.id] || {};
+    var answered = fs.filter(function (f) { return vals[f.key] !== undefined && vals[f.key] !== ""; }).length;
+    return { text: answered + " of " + fs.length + " answered", done: answered > 0 };
+  }
+
+  function renderReview() {
+    app.innerHTML = topbar(me.completedAt ? '<button class="btn ghost" id="to-dash">Back to dashboard</button>' : "") +
+      '<main class="page narrow"><div class="card"><p class="eyebrow">Almost done</p><h1>Check your answers</h1>' +
+      '<p class="mute">Blank answers count as "I don\'t have this". Edit anything, then ' + (me.completedAt ? "update" : "create") + " your dashboard.</p>" +
+      '<div class="review-list">' + STEPS.map(function (s, i) {
+        var sum = stepSummary(s);
+        return '<div class="review-row"><div><strong>' + esc(s.title) + '</strong><br><span class="pill' + (sum.done ? " done" : "") + '">' +
+          esc(sum.text) + '</span></div><button class="btn ghost" data-edit="' + i + '">Edit</button></div>';
+      }).join("") + "</div>" +
+      '<div><button class="btn big" id="create">' + (me.completedAt ? "Update my dashboard" : "Create my dashboard") + "</button></div></div></main>";
+    app.querySelectorAll("[data-edit]").forEach(function (b) {
+      b.onclick = function () { stepIdx = Number(b.dataset.edit); personalView = "wizard"; renderWizard(); top(); };
+    });
+    if ($("to-dash")) $("to-dash").onclick = function () { personalView = "dashboard"; render(); top(); };
+    $("create").onclick = function () {
+      me.completedAt = me.completedAt || new Date().toISOString();
+      Store.saveMine(me); personalView = "dashboard"; render(); top();
+    };
+  }
+
+  // ---------- own dashboard ----------
+  function renderOwnDashboard() {
+    var a = Engine.analyzeProfile(me);
+    app.innerHTML = topbar('<button class="btn ghost" id="edit">Edit my answers</button>') +
+      '<main class="page">' + dashboardHtml(me, a, { own: true }) + "</main>";
+    bindDashboard(me, a);
+    $("edit").onclick = function () { personalView = "review"; renderReview(); top(); };
+    $("send-file").onclick = function () {
+      var btn = this, f = Exports.profileFile(me);
+      btn.disabled = true;
+      Exports.saveFile(f.filename, f.blob).then(function (r) {
+        $("send-status").textContent = r.ok ? r.msg + " Send this file to " + ADVISOR + " on WhatsApp or email." : r.msg;
+        if (r.unavailable) showCode();
+      }).finally(function () { btn.disabled = false; });
+    };
+    $("send-code").onclick = function () {
+      var code = Store.toCode(me);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function () {
+          $("send-status").textContent = "Copied. Paste it into a WhatsApp message or email to " + ADVISOR + ".";
+        }, showCode);
+      } else showCode();
+    };
+    function showCode() {
+      var box = $("code-box"); box.value = Store.toCode(me); box.hidden = false; box.focus(); box.select();
+      $("send-status").textContent = "Copy all of the text below and send it to " + ADVISOR + ".";
+    }
+  }
+
+  // =====================================================================
+  // DASHBOARD (shared by the family member and the advisor)
+  // =====================================================================
+  var SERIES = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
+  var STATUS = { good: ["✓", "Good"], warn: ["!", "Needs attention"], bad: ["✕", "Act now"], na: ["–", "Not applicable"] };
+  function statusChip(s) { return '<span class="status ' + s + '"><span aria-hidden="true">' + STATUS[s][0] + "</span>" + STATUS[s][1] + "</span>"; }
+
+  function dashboardHtml(p, a, opts) {
+    var name = firstName(p);
+    var surplusBad = a.surplus < 0;
+    var h = '<div class="dash-head"><div><p class="eyebrow">' + (opts.own ? "Your dashboard" : esc(opts.label || "Family profile")) + "</p>" +
+      "<h1>" + esc(possessive(name)) + " wealth</h1>" +
+      '<p class="mute small">Last updated ' + dateIN(p.updatedAt) + " · " + esc(a.riskProfile) + " investor · " + esc(a.regime) + " tax regime" +
+      (p.about && p.about.city ? " · " + esc(p.about.city) : "") + "</p></div>" +
+      '<div class="row"><button class="btn ghost" id="dl-xlsx">Download Excel</button><button class="btn" id="dl-pdf">Download PDF report</button></div></div>' +
+      '<p class="status-line" id="dl-status"></p>';
+
+    h += '<div class="kpis">' +
+      kpi("Net worth", inr(a.netWorth), "Assets " + inr(a.totalAssets) + " minus loans " + inr(a.totalLoans), "lead") +
+      kpi(surplusBad ? "Monthly shortfall" : "Left over each month", inr(Math.abs(a.surplus)),
+        surplusBad ? "Spending, EMIs and SIPs exceed income" : "After spending, EMIs and SIPs") +
+      kpi("Loans outstanding", inr(a.totalLoans), a.monthlyEmi ? inr(a.monthlyEmi) + " in EMIs each month" : "No EMIs") +
+      kpi("Emergency fund", a.emergencyMonths === null ? "-" : a.emergencyMonths.toFixed(1) + " months",
+        "Cash, FDs and debt funds vs monthly needs") + "</div>";
+
+    var acts = a.checks.filter(function (c) { return c.status === "bad"; }).length;
+    var warns = a.checks.filter(function (c) { return c.status === "warn"; }).length;
+    h += '<section class="card"><div class="spread"><h2>Health check</h2><span class="mute small">' +
+      (acts ? acts + " to act on" : "Nothing urgent") + (warns ? ", " + warns + " to watch" : "") + "</span></div>" +
+      '<div class="checks">' + a.checks.map(function (c) {
+        return '<div class="check"><div class="top"><h3>' + esc(c.title) + "</h3>" + statusChip(c.status) + "</div>" +
+          '<div class="val">' + esc(c.value) + '</div><p class="small mute">' + esc(c.detail) + "</p></div>";
+      }).join("") + '</div><p class="note">Thresholds are common rules of thumb used by planners, not regulations.</p></section>';
+
+    // Wealth composition + cash flow
+    var groups = a.groups.filter(function (g) { return g.value > 0; });
+    var colorOf = {}; a.groups.forEach(function (g, i) { colorOf[g.id] = "var(" + SERIES[i] + ")"; }); // colour follows the category
+    var wealth = a.totalAssets ? '<div class="stack" role="img" aria-label="Assets by category">' + groups.map(function (g) {
+      var pct = g.value / a.totalAssets * 100;
+      return '<div style="width:' + pct + "%;background:" + colorOf[g.id] + '" data-tip="' + esc(g.label + ": " + inr(g.value) + " (" + Math.round(pct) + "%)") + '"></div>';
+    }).join("") + "</div>" +
+      '<div class="table-wrap"><table><thead><tr><th>Category</th><th class="r">Value</th><th class="r">Share</th></tr></thead><tbody>' +
+      groups.map(function (g) {
+        return '<tr><td><span class="sw" style="background:' + colorOf[g.id] + '"></span>' + esc(g.label) + '</td><td class="r">' + inr(g.value) +
+          '</td><td class="r">' + Math.round(g.value / a.totalAssets * 100) + "%</td></tr>";
+      }).join("") + '</tbody><tfoot><tr><td>Total</td><td class="r">' + inr(a.totalAssets) + '</td><td class="r">100%</td></tr></tfoot></table></div>'
+      : '<p class="mute">No assets entered yet.</p>';
+
+    var flowMax = Math.max(a.monthlyIncome, a.monthlySpend + a.monthlyEmi + a.monthlySip, 1);
+    function bar(label, v, cls) {
+      return '<div class="bar-row ' + (cls || "") + '"><span>' + label + '</span><div class="bar-track"><div style="width:' +
+        Math.max(0, v) / flowMax * 100 + '%" data-tip="' + esc(label + ": " + inr(v)) + '"></div></div><span class="num">' + inr(v) + "</span></div>";
+    }
+    var flow = a.monthlyIncome || a.monthlySpend ? '<div class="bars">' + bar("Income", a.monthlyIncome) + bar("Spending", a.monthlySpend, "out") +
+      bar("Loan EMIs", a.monthlyEmi, "out") + bar("SIPs and RDs", a.monthlySip, "out") +
+      bar(a.surplus < 0 ? "Shortfall" : "Left over", Math.abs(a.surplus), "total") + "</div>" +
+      (a.annualIncomeEstimated && a.monthlyIncome ? '<p class="note">Tax bracket estimated from monthly income. Add yearly income before tax for a better estimate.</p>' : "")
+      : '<p class="mute">No income or spending entered yet.</p>';
+
+    h += '<div class="grid2"><section class="card"><h2>Where your wealth sits</h2>' + wealth + "</section>" +
+      '<section class="card"><h2>Monthly cash flow</h2>' + flow + "</section></div>";
+
+    if (a.loans.length) h += '<section class="card"><h2>What you owe</h2><div class="table-wrap"><table><thead><tr><th>Loan</th><th class="r">Outstanding</th>' +
+      '<th class="r">EMI</th><th class="r">Rate</th><th class="r">Years left</th></tr></thead><tbody>' + a.loans.map(function (l) {
+        return "<tr><td>" + esc(l.type || "Loan") + '</td><td class="r">' + inr(l.outstanding) + '</td><td class="r">' + inr(l.emi) +
+          '</td><td class="r">' + (l.rate ? esc(l.rate) + "%" : "-") + '</td><td class="r">' + (l.yearsLeft ? esc(l.yearsLeft) : "-") + "</td></tr>";
+      }).join("") + '</tbody><tfoot><tr><td>Total</td><td class="r">' + inr(a.totalLoans) + '</td><td class="r">' + inr(a.monthlyEmi) +
+      "</td><td></td><td></td></tr></tfoot></table></div></section>";
+
+    if (a.goals.length) {
+      var have = a.monthlySip + Math.max(0, a.surplus);
+      h += '<section class="card"><div class="spread"><h2>Goals</h2><span class="mute small">Need ' + inr(a.goalSip) + "/month · you can put aside " + inr(have) + "</span></div>" +
+        '<div class="table-wrap"><table><thead><tr><th>Goal</th><th class="r">In</th><th class="r">Cost today</th><th class="r">Cost then</th>' +
+        '<th class="r">Already saved</th><th class="r">Invest per month</th></tr></thead><tbody>' + a.goals.map(function (g) {
+          return "<tr><td>" + esc(g.name) + '</td><td class="r">' + g.years + ' yrs</td><td class="r">' + inr(g.amount) + '</td><td class="r">' + inr(g.futureCost) +
+            '</td><td class="r">' + inr(g.saved) + '</td><td class="r">' + inr(g.monthlyNeeded) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" +
+        '<p class="note">Costs rise 6% a year for inflation. Assumed returns: 6.5% for goals within 3 years, ' +
+        Math.round(({ Conservative: 7, Balanced: 9, Aggressive: 11 })[a.riskProfile]) + "% for longer goals.</p></section>";
+    }
+
+    var split = a.split;
+    h += '<section class="card"><h2>' + (a.investable ? "Where to invest your " + inr(a.investable) + " each month" : "How to split future investments") + "</h2>" +
+      (a.investable ? "" : '<p class="mute small">Nothing is left over each month right now. Use this split once there is.</p>') +
+      '<div class="stack" role="img" aria-label="Suggested split">' + split.lines.map(function (l, i) {
+        return '<div style="width:' + l.pct + "%;background:var(" + SERIES[i] + ')" data-tip="' + esc(l.name + ": " + l.pct + "%") + '"></div>';
+      }).join("") + "</div>" +
+      '<div class="table-wrap"><table><thead><tr><th>Fund type</th><th>Asset class</th><th class="r">Share</th><th class="r">Per month</th></tr></thead><tbody>' +
+      split.lines.map(function (l, i) {
+        return '<tr><td><span class="sw" style="background:var(' + SERIES[i] + ')"></span>' + esc(l.name) + "</td><td>" + esc(l.cls) + '</td><td class="r">' +
+          l.pct + '%</td><td class="r">' + (a.investable ? inr(a.investable * l.pct / 100) : "-") + "</td></tr>";
+      }).join("") + "</tbody></table></div>" +
+      (split.taxInsight ? '<div class="card callout"><h3>Tax tip: arbitrage funds vs FDs</h3><p class="small">' + esc(split.taxInsight.text) + "</p></div>" : "") +
+      '<p class="note">Based on a ' + esc(a.riskProfile.toLowerCase()) + " risk profile and age " + esc((p.about && p.about.age) || "40") +
+      ". Clear high-interest debt and build the emergency fund before investing for growth.</p></section>";
+
+    if (opts.own) h += '<section class="card share"><h2>Send your profile to ' + ADVISOR + "</h2>" +
+      "<p>" + ADVISOR + " can see everything in this file. Send it again whenever you update your answers.</p>" +
+      '<div class="row"><button class="btn" id="send-file">Download profile file</button><button class="btn ghost" id="send-code">Copy as text</button></div>' +
+      '<p class="status-line" id="send-status"></p><textarea class="code" id="code-box" readonly hidden></textarea>' +
+      '<p class="note">The Excel download also works: it carries the same profile.</p></section>';
+
+    h += '<p class="note">General guidance from the figures entered, using simple rules of thumb. Not investment, tax or legal advice. ' +
+      "Tax rates are indicative for FY 2025-26. Mutual fund investments are subject to market risks.</p>";
+    return h;
+  }
+
+  function kpi(k, v, s, cls) {
+    return '<div class="kpi ' + (cls || "") + '"><span class="k">' + esc(k) + '</span><span class="v">' + esc(v) + '</span><span class="s">' + esc(s) + "</span></div>";
+  }
+
+  function bindDashboard(p, a) {
+    function run(btn, build) {
+      btn.disabled = true; $("dl-status").textContent = "Preparing file...";
+      Promise.resolve().then(function () { var f = build(); return Exports.saveFile(f.filename, f.blob); })
+        .then(function (r) { $("dl-status").textContent = r.msg; }, function (e) { $("dl-status").textContent = e.message || "Export failed."; })
+        .finally(function () { btn.disabled = false; });
+    }
+    $("dl-pdf").onclick = function () { run(this, function () { return Exports.reportPdf(p, a); }); };
+    $("dl-xlsx").onclick = function () { run(this, function () { return Exports.reportXlsx(p, a); }); };
+  }
+
+  // =====================================================================
+  // ADVISOR SIDE (#advisor)
+  // =====================================================================
   var MOCK = [
     { name: "Arjun Malhotra", city: "Mumbai", age: 52, income: 48000000, aum: 185000000, risk: "Balanced", regime: "New" },
     { name: "Priya Venkataraman", city: "Bengaluru", age: 44, income: 32000000, aum: 96000000, risk: "Aggressive", regime: "New" },
@@ -429,96 +1391,141 @@ ul{padding-left:18px;margin:0}
     { name: "Vikram Singhania", city: "Kolkata", age: 57, income: 27500000, aum: 118000000, risk: "Balanced", regime: "Old" },
     { name: "Meera Deshpande", city: "Pune", age: 49, income: 15500000, aum: 63000000, risk: "Balanced", regime: "New" }
   ];
-
-  // State: MOCK is constant; `added` holds portal submissions and persists per browser (best-effort).
-  var added = load();
-  var lastProposal = null; // { input, result } behind the current PDF button
-  function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; } }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(added)); } catch (e) { /* storage unavailable */ } }
-  function clients() { return MOCK.concat(added.map(function (c) { return Object.assign({ isNew: true }, c); })); }
-
-  var $ = function (id) { return document.getElementById(id); };
-  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+  // Fictional profile for demos.
+  var SAMPLE = { id: "sample", version: 1, createdAt: "2026-09-01T10:00:00.000Z", updatedAt: "2026-09-28T10:00:00.000Z",
+    consentAt: "2026-09-01T10:00:00.000Z", completedAt: "2026-09-01T10:30:00.000Z", skipped: {},
+    about: { name: "Rohan Mehta (sample)", age: 38, city: "Pune", occupation: "Salaried", spouseDependent: "yes", children: 2, parents: 0, regime: "New" },
+    income: { salary: 185000, interest: 4000, bonus: 300000, annualGross: 3100000 },
+    spending: { household: 70000, education: 18000, other: 10000, premiums: 55000, sip: 25000 },
+    assets: { savings: 250000, fd: 400000, equityMf: 1800000, debtMf: 200000, stocks: 350000, epf: 1100000, ppf: 450000, gold: 500000, home: 11000000 },
+    loans: [{ type: "Home", outstanding: 5200000, emi: 46000, rate: 8.5, yearsLeft: 15 }, { type: "Car", outstanding: 450000, emi: 14500, rate: 9.2, yearsLeft: 3 },
+      { type: "Credit card", outstanding: 60000, emi: 0, rate: 42 }],
+    insurance: { term: 15000000, employerHealth: 500000, health: 500000 },
+    goals: [{ type: "Child's education", name: "Kids' higher education", amount: 4000000, years: 10, saved: 300000 },
+      { type: "Retirement", amount: 50000000, years: 22, saved: 0 }],
+    risk: { drop: "wait", horizon: "long" } };
 
   function renderAdvisor() {
-    var list = clients();
-    var aum = list.reduce(function (s, c) { return s + c.aum; }, 0);
-    $("m-aum").textContent = Engine.inr(aum);
-    $("m-count").textContent = list.length;
-    $("m-avg").textContent = Engine.inr(aum / list.length);
-    $("client-rows").innerHTML = list.map(function (c) {
-      return "<tr><td>" + esc(c.name) + (c.isNew ? "<span class='new-flag'>New</span>" : "") + "</td><td>" + esc(c.city || "-") +
-        "</td><td class='num'>" + c.age + "</td><td class='num'>" + Engine.inr(c.income) + "</td><td class='num'>" + Engine.inr(c.aum) +
-        "</td><td><span class='pill " + esc(c.risk) + "'>" + esc(c.risk) + "</span></td><td>" + esc(c.regime) + "</td></tr>";
-    }).join("");
-  }
-
-  var COLORS = { "Nifty 50 Index Fund": "--c-n50", "Nifty Next 50 Index Fund": "--c-next", "Short-Term Debt Fund": "--c-debt",
-    "Arbitrage Fund": "--c-arb", "Sovereign Gold Bonds (SGB)": "--c-gold" };
-  function color(name) { return "var(" + COLORS[name] + ")"; }
-
-  function renderResult(input, r) {
-    var bar = r.lines.map(function (l) {
-      return "<div style='width:" + l.pct + "%;background:" + color(l.name) + "' title='" + esc(l.name) + " " + l.pct + "%'></div>";
-    }).join("");
-    var rows = r.lines.map(function (l) {
-      return "<tr><td>" + esc(l.cls) + "</td><td><span class='sw' style='background:" + color(l.name) + "'></span>" + esc(l.name) +
-        "</td><td class='num'>" + l.pct + "%</td><td class='num'>" + Engine.inr(l.amount) + "</td></tr>";
-    }).join("");
-    var html = "<div class='card'><div class='head' style='margin-bottom:0'><h3>Recommended portfolio for " + esc(input.name.trim()) + "</h3>" +
-      "<button class='btn ghost' id='export-pdf' type='button'>Download proposal (PDF)</button></div>" +
-      "<p class='status' id='pdf-status'></p>" +
-      "<div class='alloc'>" + bar + "</div>" +
-      "<div class='table-wrap'><table><thead><tr><th>Asset class</th><th>Instrument</th><th class='num'>Weight</th><th class='num'>Amount</th></tr></thead><tbody>" +
-      rows + "</tbody></table></div></div>";
-    if (r.taxInsight) {
-      html += "<div class='card callout'><h3>Tax efficiency: Arbitrage Funds vs FDs</h3><p>" + esc(r.taxInsight.text) + "</p>" +
-        "<p class='small'>Assumes a 7% pre-tax return, no surcharge and no exit load. Rates are indicative for FY 2025-26. Confirm current law with a tax professional.</p></div>";
-    }
-    html += "<div class='card'><h3>Notes</h3><ul>" + r.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></div>";
-    $("result").innerHTML = html;
-    $("export-pdf").addEventListener("click", onPdf);
-  }
-
-  async function runExport(btn, statusEl, build) {
-    btn.disabled = true; statusEl.textContent = "Preparing file...";
-    try { var f = build(); statusEl.textContent = await Exports.saveFile(f.filename, f.blob); }
-    catch (e) { statusEl.textContent = e.message || "Export failed."; }
-    finally { btn.disabled = false; }
-  }
-  function onPdf() {
-    if (!lastProposal) return;
-    runExport($("export-pdf"), $("pdf-status"), function () { return Exports.proposalPdf(lastProposal.input, lastProposal.result); });
-  }
-  $("export-xlsx").addEventListener("click", function () {
-    runExport($("export-xlsx"), $("xlsx-status"), function () { return Exports.clientBookXlsx(clients()); });
-  });
-
-  function show(view) {
-    $("view-advisor").hidden = view !== "advisor";
-    $("view-client").hidden = view !== "client";
-    document.querySelectorAll(".nav-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
-    if (view === "advisor") renderAdvisor();
-  }
-  document.querySelectorAll(".nav-btn").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.view); }); });
-
-  $("client-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var input = {
-      name: $("f-name").value, age: Number($("f-age").value), income: Number($("f-income").value),
-      corpus: Number($("f-corpus").value), risk: $("f-risk").value,
-      regime: document.querySelector("input[name=regime]:checked").value
+    var hidden = Store.isFamilyHidden();
+    app.innerHTML = '<div class="adv"><aside class="side"><span class="brand">BharatWealth <span>Nexus</span></span><span class="tag">Advisor view</span>' +
+      '<nav><button class="nav-btn" data-tab="family">Family profiles</button><button class="nav-btn" data-tab="demo">Demo clients</button></nav>' +
+      '<div class="side-foot"><label class="switch"><input type="checkbox" id="hide-toggle"' + (hidden ? " checked" : "") + "> Hide family data</label>" +
+      "<span>Hides real family profiles on this device, for example before a demo.</span>" +
+      '<a href="#" id="to-personal">Open my own profile</a></div></aside><main class="adv-main" id="adv-main"></main></div>';
+    app.querySelectorAll(".nav-btn").forEach(function (b) {
+      b.onclick = function () { advTab = b.dataset.tab; detail = null; renderAdvMain(); top(); };
+    });
+    $("hide-toggle").onchange = function () {
+      Store.setFamilyHidden(this.checked);
+      if (this.checked && detail && detail.from === "family") { detail = null; advTab = "family"; }
+      renderAdvMain();
     };
-    var r = Engine.buildPortfolio(input);
-    var err = $("form-error");
-    if (r.errors.length) { err.textContent = r.errors.join(" "); err.hidden = false; return; }
-    err.hidden = true;
-    added.push({ name: input.name.trim(), city: "-", age: input.age, income: input.income, aum: input.corpus, risk: input.risk, regime: input.regime });
-    save();
-    lastProposal = { input: input, result: r };
-    renderResult(input, r);
-  });
+    $("to-personal").onclick = function (e) { e.preventDefault(); history.pushState("", "", location.pathname + location.search); personalView = null; render(); top(); };
+    renderAdvMain();
+  }
 
-  renderAdvisor();
+  function renderAdvMain() {
+    var main = $("adv-main");
+    var tab = detail ? detail.from : advTab;
+    app.querySelectorAll(".nav-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.tab === tab); });
+    if (detail) return renderDetail(main);
+    if (advTab === "demo") return renderDemo(main);
+    renderFamily(main);
+  }
+
+  function renderFamily(main) {
+    if (Store.isFamilyHidden()) {
+      main.innerHTML = '<h1>Family profiles</h1><div class="empty"><h2>Family data is hidden</h2>' +
+        "<p>Profiles stay saved on this device but are not shown. Turn this off when you are done presenting.</p>" +
+        '<button class="btn ghost" id="unhide">Show family data</button></div>';
+      $("unhide").onclick = function () { Store.setFamilyHidden(false); $("hide-toggle").checked = false; renderAdvMain(); };
+      return;
+    }
+    var list = Store.listFamily().sort(function (x, y) { return (y.updatedAt || "").localeCompare(x.updatedAt || ""); });
+    main.innerHTML = '<div><h1>Family profiles</h1><p class="mute">Profiles your family sent you. They are stored only in this browser.</p></div>' +
+      '<div class="drop" id="drop"><h3>Add or update a profile</h3>' +
+      '<p class="small mute">Drop the .json or .xlsx file they sent, or choose it. A newer file from the same person replaces the older one.</p>' +
+      '<div class="row"><label class="btn" for="file-in">Choose file</label><input type="file" id="file-in" accept=".json,.xlsx,application/json" hidden>' +
+      '<button type="button" class="btn ghost" id="paste-toggle">Paste text instead</button></div>' +
+      '<div id="paste-area" class="field" hidden><label for="paste-box">Text they sent (starts with BWN1:)</label>' +
+      '<textarea class="code" id="paste-box"></textarea><div><button type="button" class="btn" id="paste-go">Import text</button></div></div>' +
+      '<p class="status-line" id="imp-status"></p></div>' +
+      (list.length ? '<section class="card"><div class="table-wrap"><table class="profile-list"><thead><tr><th>Name</th><th>Age · City</th>' +
+        '<th class="r">Net worth</th><th class="r">Left over / month</th><th>Health</th><th>Last updated</th><th></th></tr></thead><tbody>' +
+        list.map(function (p) {
+          var a = Engine.analyzeProfile(p);
+          return "<tr><td><strong>" + esc((p.about && p.about.name) || "Unnamed") + "</strong></td><td>" + esc([p.about && p.about.age, p.about && p.about.city].filter(Boolean).join(" · ") || "-") +
+            '</td><td class="r">' + inr(a.netWorth) + '</td><td class="r">' + inr(a.surplus) + "</td><td>" +
+            (a.alerts ? statusChip("bad").replace("Act now", a.alerts + " to act on") : statusChip("good").replace("Good", "No urgent issues")) +
+            "</td><td>" + dateIN(p.updatedAt) + '</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn ghost" data-open="' + esc(p.id) + '">Open</button>' +
+            '<button class="btn quiet" data-del="' + esc(p.id) + '">Delete</button></div></td></tr>';
+        }).join("") + "</tbody></table></div></section>"
+        : '<div class="empty"><h2>No family profiles yet</h2><p>Send your family the site link without #advisor at the end. ' +
+          "When they finish, they send you a profile file from their dashboard. Import it here.</p></div>");
+
+    var drop = $("drop");
+    ["dragenter", "dragover"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+    ["dragleave", "drop"].forEach(function (ev) { drop.addEventListener(ev, function () { drop.classList.remove("over"); }); });
+    drop.addEventListener("drop", function (e) { e.preventDefault(); if (e.dataTransfer.files[0]) importFile(e.dataTransfer.files[0]); });
+    $("file-in").onchange = function () { if (this.files[0]) importFile(this.files[0]); this.value = ""; };
+    $("paste-toggle").onclick = function () { $("paste-area").hidden = !$("paste-area").hidden; };
+    $("paste-go").onclick = function () { finishImport(Store.parseTransfer($("paste-box").value)); };
+    main.querySelectorAll("[data-open]").forEach(function (b) {
+      b.onclick = function () { detail = { profile: Store.getFamily(b.dataset.open), from: "family" }; renderAdvMain(); top(); };
+    });
+    main.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = function () {
+        if (b.dataset.armed) { Store.deleteFamily(b.dataset.del); renderAdvMain(); return; }
+        b.dataset.armed = "1"; b.textContent = "Confirm delete"; b.className = "btn danger";
+        setTimeout(function () { if (b.isConnected) { delete b.dataset.armed; b.textContent = "Delete"; b.className = "btn quiet"; } }, 4000);
+      };
+    });
+  }
+
+  function importFile(file) {
+    $("imp-status").textContent = "Reading " + file.name + "...";
+    Exports.readImportFile(file).then(finishImport);
+  }
+  function finishImport(res) {
+    if (res.error) { $("imp-status").textContent = res.error; return; }
+    var r = Store.upsertFamily(res.profile), name = (res.profile.about && res.profile.about.name) || "Profile";
+    if (!r.ok && r.reason === "older") { $("imp-status").textContent = "You already have a newer version of " + name + "'s profile. Nothing changed."; return; }
+    if (!r.ok) { $("imp-status").textContent = "This browser blocked saving. Try a normal (not private) window."; return; }
+    renderAdvMain();
+    $("imp-status").textContent = (r.replaced ? "Updated " : "Added ") + name + ".";
+  }
+
+  function renderDetail(main) {
+    var p = detail.profile;
+    if (!p) { detail = null; return renderAdvMain(); }
+    var a = Engine.analyzeProfile(p);
+    main.innerHTML = '<div><button class="btn quiet" id="back-list">← ' + (detail.from === "demo" ? "Demo clients" : "All family profiles") + "</button></div>" +
+      dashboardHtml(p, a, { own: false, label: detail.from === "demo" ? "Sample profile (fictional)" : "Family profile" });
+    bindDashboard(p, a);
+    $("back-list").onclick = function () { advTab = detail.from; detail = null; renderAdvMain(); top(); };
+  }
+
+  function renderDemo(main) {
+    var aum = MOCK.reduce(function (s, c) { return s + c.aum; }, 0);
+    main.innerHTML = '<div class="spread"><div><h1>Demo clients</h1><p class="mute">Fictional HNWI book for demonstrations.</p></div>' +
+      '<div class="row"><button class="btn ghost" id="demo-xlsx">Export client book (.xlsx)</button><button class="btn" id="open-sample">Open sample dashboard</button></div></div>' +
+      '<p class="status-line" id="demo-status"></p>' +
+      '<div class="kpis">' + kpi("Total AUM managed", inr(aum), "Across " + MOCK.length + " clients", "lead") +
+      kpi("Client count", String(MOCK.length), "Fictional HNWI book") + kpi("Average client AUM", inr(aum / MOCK.length), "Per client") + "</div>" +
+      '<section class="card"><div class="table-wrap"><table><thead><tr><th>Client</th><th>City</th><th class="r">Age</th><th class="r">Annual income</th>' +
+      '<th class="r">AUM</th><th>Risk</th><th>Tax regime</th></tr></thead><tbody>' + MOCK.map(function (c) {
+        return "<tr><td>" + esc(c.name) + "</td><td>" + esc(c.city) + '</td><td class="r">' + c.age + '</td><td class="r">' + inr(c.income) +
+          '</td><td class="r">' + inr(c.aum) + "</td><td>" + esc(c.risk) + "</td><td>" + esc(c.regime) + "</td></tr>";
+      }).join("") + "</tbody></table></div></section>";
+    $("open-sample").onclick = function () { detail = { profile: SAMPLE, from: "demo" }; renderAdvMain(); top(); };
+    $("demo-xlsx").onclick = function () {
+      var btn = this; btn.disabled = true;
+      Promise.resolve().then(function () { var f = Exports.clientBookXlsx(MOCK); return Exports.saveFile(f.filename, f.blob); })
+        .then(function (r) { $("demo-status").textContent = r.msg; }, function (e) { $("demo-status").textContent = e.message; })
+        .finally(function () { btn.disabled = false; });
+    };
+  }
+
+  render();
 })();
 </script>
