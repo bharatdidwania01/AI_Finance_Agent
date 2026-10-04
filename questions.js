@@ -36,14 +36,13 @@
       ]
     },
     {
-      id: "spending", title: "Money going out", intro: "Typical monthly amounts. Do not include loan EMIs here; we ask about loans later.",
-      fields: [
-        { key: "household", label: "Household expenses", type: "amount", per: "month", hint: "Groceries, bills, fuel, domestic help, eating out." },
-        { key: "rent", label: "Rent you pay", type: "amount", per: "month" },
-        { key: "education", label: "School or college fees", type: "amount", per: "month", hint: "Yearly fees divided by 12." },
-        { key: "other", label: "Other regular spending", type: "amount", per: "month" },
-        { key: "premiums", label: "Insurance premiums", type: "amount", per: "year", hint: "Health, term and LIC premiums together." },
-        { key: "sip", label: "SIPs, RDs or other monthly investments", type: "amount", per: "month" }
+      id: "spending", title: "Money going out", intro: "Rough monthly amounts are fine; your bank or UPI app history helps. Do not include loan EMIs here; we ask about loans later.",
+      groups: [
+        { title: "Needs", fields: [] },
+        { title: "Wants", fields: [] },
+        { title: "Yearly and investments", fields: [
+          { key: "premiums", label: "Insurance premiums", type: "amount", per: "year", hint: "Health, term and LIC premiums together." },
+          { key: "sip", label: "SIPs, RDs or other monthly investments", type: "amount", per: "month" } ] }
       ]
     },
     {
@@ -80,6 +79,10 @@
           { key: "outstanding", label: "Amount still to repay", type: "amount" },
           { key: "emi", label: "EMI", type: "amount", per: "month" },
           { key: "rate", label: "Interest rate (% a year)", type: "count", min: 0, max: 60, step: "0.1" },
+          { key: "rateType", label: "Is the interest rate fixed or floating?", type: "choice", options: ["Floating", "Fixed", "Not sure"],
+            hint: "Floating-rate loans to individuals sanctioned from 1 Jan 2026 carry no prepayment charges (RBI)." },
+          { key: "inRepayment", label: "Have EMIs started?", type: "choice", options: [["yes", "Yes, paying EMIs"], ["no", "Not yet (moratorium)"]],
+            hint: "Education loans often have a study-period moratorium while interest keeps adding up." },
           { key: "yearsLeft", label: "Years left", type: "count", min: 0, max: 40 }
         ] }
     },
@@ -114,6 +117,14 @@
       ]
     }
   ];
+
+  // Spending categories come from the engine so setup, check-ins and analysis always match.
+  var spendStep = STEPS.find(function (s) { return s.id === "spending"; });
+  ["need", "want"].forEach(function (kind, i) {
+    spendStep.groups[i].fields = Engine.SPEND_CATS.filter(function (c) { return c.kind === kind; }).map(function (c) {
+      return { key: c.key, label: c.label, type: "amount", per: "month", hint: c.hint };
+    });
+  });
 
   function fieldsOf(step) {
     if (step.fields) return step.fields;

@@ -98,6 +98,30 @@
     });
     y += 62;
 
+    var pl = Planner.plan(p, a, { closeCall: (p.prefs && p.prefs.closeCall) || "split" });
+    heading("Plan for this month");
+    pl.warnings.forEach(function (w) { text(w, 9.5, [176, 116, 0]); });
+    if (pl.items.length) table([{ label: "Step", width: .3 }, { label: "Amount", width: .16, align: "right" }, { label: "Why", width: .54 }],
+      pl.items.map(function (it) { return [it.title, inr(it.amount), it.reason]; }));
+    pl.closeCalls.forEach(function (d) {
+      text(d.loan.type + " loan: costs " + d.effective + "% vs about " + d.expected + "% expected from investing. Close call; current choice: " +
+        ({ split: "split 50/50", prepay: "prepay", invest: "invest" })[(p.prefs && p.prefs.closeCall) || "split"] + ".", 9.5);
+    });
+    if (pl.actions.length) { y += 4; pl.actions.forEach(function (x) { text("- " + x, 9.5); }); }
+
+    var sr = Planner.spendingReport(p, a);
+    if (sr) {
+      heading("Spending in " + Planner.monthName(sr.month));
+      text("Compared with " + sr.basis + ". Needs and EMIs " + Math.round(sr.needs / (sr.income || 1) * 100) + "% of income (guide 50%), wants " +
+        Math.round(sr.wants / (sr.income || 1) * 100) + "% (guide 30%), saved " + Math.round(sr.saved / (sr.income || 1) * 100) + "% (guide 20%).", 9.5, mute);
+      y += 4;
+      table([{ label: "Category", width: .44 }, { label: "This month", width: .2, align: "right" }, { label: "Usual", width: .18, align: "right" }, { label: "Change", width: .18, align: "right" }],
+        sr.rows.map(function (r) {
+          return { cells: [r.label, inr(r.now), inr(r.usual), r.change === null ? "new" : (r.change > 0 ? "+" : "") + Math.round(r.change * 100) + "%"],
+            colors: r.flag ? [null, null, null, STATUS_RGB.warn] : null };
+        }), { total: ["Total", inr(sr.total), "", ""] });
+    }
+
     heading("Health check");
     table([{ label: "Area", width: .22 }, { label: "Status", width: .16 }, { label: "Where you are", width: .2 }, { label: "What it means", width: .42 }],
       a.checks.map(function (c) { return { cells: [c.title, STATUS[c.status], c.value, c.detail], colors: [null, STATUS_RGB[c.status]] }; }));
@@ -141,9 +165,11 @@
         (longGoal ? ", " + Math.round(longGoal.rate * 100) + "% for longer goals (" + a.riskProfile.toLowerCase() + " investor)." : "."), 8.5, mute);
     }
 
-    heading("Where to put your monthly surplus");
-    text(a.investable ? "Suggested split of the " + inr(a.investable) + " you have left each month:" :
-      "You have no surplus left each month right now. This is the split to use once you do:", 9.5);
+    var sipAmt = (pl.items.find(function (x) { return x.id === "invest"; }) || {}).amount || 0;
+    a = Object.assign({}, a, { investable: sipAmt });
+    heading("How to split new SIPs");
+    text(sipAmt ? "Suggested split of the extra " + inr(sipAmt) + " a month going to SIPs:" :
+      "This month's money goes to the steps above first. Use this split once SIPs are next:", 9.5);
     y += 4;
     table([{ label: "Asset class", width: .25 }, { label: "Fund type", width: .45 }, { label: "Share", width: .12, align: "right" },
       { label: "Per month", width: .18, align: "right" }],
@@ -186,12 +212,27 @@
     sheet("Income", [["Item", "Amount (INR)"]].concat(rowsFor("income", inc)), [46, 16]);
     sheet("Spending", [["Item", "Amount (INR)"]].concat(rowsFor("spending", sp)), [46, 16]);
     sheet("Assets", [["Item", "Value (INR)"]].concat(rowsFor("assets", as)).concat([[], ["Total assets", Math.round(a.totalAssets)]]), [46, 16]);
-    sheet("Loans", [["Type", "Outstanding (INR)", "EMI (INR)", "Rate (%)", "Years left"]].concat((p.loans || []).map(function (l) {
-      return [l.type || "", Number(l.outstanding) || 0, Number(l.emi) || 0, Number(l.rate) || 0, Number(l.yearsLeft) || 0];
-    })), [18, 18, 12, 10, 10]);
+    sheet("Loans", [["Type", "Outstanding (INR)", "EMI (INR)", "Rate (%)", "Fixed or floating", "EMIs started", "Years left"]].concat((p.loans || []).map(function (l) {
+      return [l.type || "", Number(l.outstanding) || 0, Number(l.emi) || 0, Number(l.rate) || 0, l.rateType || "", l.inRepayment === "no" ? "No (moratorium)" : "Yes", Number(l.yearsLeft) || 0];
+    })), [18, 18, 12, 10, 16, 16, 10]);
     sheet("Insurance", [["Cover", "Amount (INR)"]].concat(rowsFor("insurance", insr)), [46, 16]);
     sheet("Goals", [["Goal", "Years", "Cost today (INR)", "Cost then (INR)", "Already saved (INR)", "Monthly SIP needed (INR)"]].concat(
       a.goals.map(function (g) { return [g.name, g.years, g.amount, g.futureCost, g.saved, g.monthlyNeeded]; })), [26, 8, 16, 16, 18, 22]);
+    var pl = Planner.plan(p, a, { closeCall: (p.prefs && p.prefs.closeCall) || "split" });
+    sheet("Plan", [["Step", "Amount (INR)", "Why"]].concat(pl.items.map(function (it) { return [it.title, it.amount, it.reason.replace(/\u20B9/g, "Rs ")]; }))
+      .concat(pl.warnings.length ? [[]].concat(pl.warnings.map(function (w) { return ["Note", "", w.replace(/\u20B9/g, "Rs ")]; })) : []), [34, 14, 100]);
+    var cks = (p.checkins || []).slice().sort(function (x, y) { return x.month < y.month ? -1 : 1; });
+    if (cks.length) {
+      var loanIds = (p.loans || []).map(function (l) { return l.lid; });
+      var head = ["Month"].concat(Engine.SPEND_CATS.map(function (c) { return c.label; }), ["Total spending", "SIPs paid", "Extra money in", "Savings balance"],
+        (p.loans || []).reduce(function (acc, l) { return acc.concat([l.type + " paid", l.type + " extra", l.type + " balance"]); }, []));
+      sheet("Check-ins", [head].concat(cks.map(function (c) {
+        return [Planner.monthName(c.month)].concat(Engine.SPEND_CATS.map(function (k) { return Number(c.spending && c.spending[k.key]) || 0; }),
+          [Engine.spendTotal(c.spending), c.sip || 0, c.extraIncome || 0, c.bank === undefined ? "" : c.bank],
+          loanIds.reduce(function (acc, id) { var x = (c.loans || {})[id] || {}; return acc.concat([x.emi || 0, x.extra || 0, x.balance === undefined ? "" : x.balance]); }, []));
+      })), [12].concat(head.slice(1).map(function () { return 14; })));
+    }
+    a = Object.assign({}, a, { investable: (pl.items.find(function (x) { return x.id === "invest"; }) || {}).amount || 0 });
     sheet("Suggested split", [["Asset class", "Fund type", "Share (%)", "Per month (INR)"]].concat(
       a.split.lines.map(function (l) { return [l.cls, l.name, l.pct, Math.round(a.investable * l.pct / 100)]; })), [16, 30, 10, 16]);
 

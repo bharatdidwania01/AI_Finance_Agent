@@ -6,7 +6,7 @@ const src = fs.readFileSync("index.html", "utf8");
 const between = (a, b) => src.slice(src.indexOf(a) + a.length, src.indexOf(b));
 const inline = (html) => html
   .replace(/<link rel="stylesheet" href="styles\.css">/, () => "<style>\n" + fs.readFileSync("styles.css", "utf8") + "</style>")
-  .replace(/<script src="(engine|questions|store|exports|app)\.js"><\/script>/g, (_, f) => "<script>\n" + fs.readFileSync(f + ".js", "utf8") + "</script>");
+  .replace(/<script src="(engine|planner|questions|store|exports|app)\.js"><\/script>/g, (_, f) => "<script>\n" + fs.readFileSync(f + ".js", "utf8") + "</script>");
 const out = inline(between("<!-- BUILD:HEAD-START -->", "<!-- BUILD:HEAD-END -->")) +
   inline(between("<!-- BUILD:BODY-START -->", "<!-- BUILD:BODY-END -->"));
 fs.mkdirSync("dist", { recursive: true });

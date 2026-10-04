@@ -154,6 +154,33 @@
     return ["Conservative", "Balanced", "Aggressive"][score];
   }
 
+  // Monthly spending categories. Shared by the setup questions, the monthly check-in and the spending analysis.
+  var SPEND_CATS = [
+    { key: "rent", label: "Rent or home maintenance", kind: "need" },
+    { key: "groceries", label: "Groceries and household supplies", kind: "need" },
+    { key: "utilities", label: "Electricity, gas, phone and internet", kind: "need" },
+    { key: "transport", label: "Fuel, commute and cabs", kind: "need" },
+    { key: "education", label: "School or college fees", kind: "need", hint: "Yearly fees divided by 12." },
+    { key: "health", label: "Medicines and doctor visits", kind: "need" },
+    { key: "family", label: "Money sent to family", kind: "need" },
+    { key: "dining", label: "Eating out and food delivery", kind: "want" },
+    { key: "shopping", label: "Clothes, shopping and gadgets", kind: "want" },
+    { key: "entertainment", label: "Subscriptions, movies and outings", kind: "want" },
+    { key: "travel", label: "Trips and holidays", kind: "want" },
+    { key: "other", label: "Everything else", kind: "want" }
+  ];
+  var LEGACY_NEEDS = ["household"]; // key used by version-1 profiles
+
+  function spendTotal(obj) {
+    return SPEND_CATS.reduce(function (s, c) { return s + num(obj && obj[c.key]); }, 0) + sum(obj, LEGACY_NEEDS);
+  }
+  function spendByKind(obj, kind) {
+    return SPEND_CATS.filter(function (c) { return c.kind === kind; }).reduce(function (s, c) { return s + num(obj && obj[c.key]); }, 0) +
+      (kind === "need" ? sum(obj, LEGACY_NEEDS) : 0);
+  }
+  // The last (up to) 3 check-ins, oldest first.
+  function recentCheckins(p, n) { return (p.checkins || []).slice().sort(function (x, y) { return x.month < y.month ? -1 : 1; }).slice(-(n || 3)); }
+
   var GOAL_RETURN = { Conservative: 0.07, Balanced: 0.09, Aggressive: 0.11 };
   var INFLATION = 0.06;
 
@@ -176,7 +203,11 @@
     var monthlyIncome = sum(inc, ["salary", "business", "rental", "pension", "interest", "other"]) + num(inc.bonus) / 12;
     var annualIncome = num(inc.annualGross) || monthlyIncome * 12;
     var annualIncomeEstimated = !num(inc.annualGross);
-    var monthlySpend = sum(sp, ["household", "rent", "education", "other"]) + num(sp.premiums) / 12;
+    // Spending basis: average of recent check-ins when there are any, otherwise the setup answers.
+    var recent = recentCheckins(p, 3);
+    var spendBasis = recent.length ? "actual" : "budget";
+    var avgSpend = recent.length ? recent.reduce(function (s, c) { return s + spendTotal(c.spending); }, 0) / recent.length : spendTotal(sp);
+    var monthlySpend = avgSpend + num(sp.premiums) / 12;
     var monthlyEmi = loans.reduce(function (s, l) { return s + num(l.emi); }, 0);
     var monthlySip = num(sp.sip);
     var surplus = monthlyIncome - monthlySpend - monthlyEmi - monthlySip;
@@ -281,6 +312,7 @@
 
     return {
       monthlyIncome: monthlyIncome, annualIncome: annualIncome, annualIncomeEstimated: annualIncomeEstimated,
+      spendBasis: spendBasis, spendMonths: recent.length,
       monthlySpend: monthlySpend, monthlyEmi: monthlyEmi, monthlySip: monthlySip, surplus: surplus, savingsRate: savingsRate,
       groups: groups, totalAssets: totalAssets, totalLoans: totalLoans, netWorth: netWorth, liquid: liquid,
       emergencyMonths: emergencyMonths, lifeCover: lifeCover, healthCover: healthCover, dependants: dependants,
@@ -294,11 +326,12 @@
 
   // Indian-style compact currency: Rs 12.5 Cr / Rs 45.0 L
   function inr(n) {
+    if (n < 0) return "\u2212" + inr(-n);
     if (n >= 1e7) return "₹" + (n / 1e7).toFixed(2) + " Cr";
     if (n >= 1e5) return "₹" + (n / 1e5).toFixed(2) + " L";
     return "₹" + fmt(n);
   }
 
-  var api = { buildPortfolio: buildPortfolio, analyzeProfile: analyzeProfile, parseAmount: parseAmount, sipFor: sipFor, ASSET_GROUPS: ASSET_GROUPS, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
+  var api = { SPEND_CATS: SPEND_CATS, spendTotal: spendTotal, spendByKind: spendByKind, recentCheckins: recentCheckins, GOAL_RETURN: GOAL_RETURN, num: num, buildPortfolio: buildPortfolio, analyzeProfile: analyzeProfile, parseAmount: parseAmount, sipFor: sipFor, ASSET_GROUPS: ASSET_GROUPS, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== "undefined" ? window : this);

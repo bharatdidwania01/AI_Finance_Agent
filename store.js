@@ -18,28 +18,48 @@
   function newProfile() {
     var now = new Date().toISOString();
     return { id: uid(), version: 1, createdAt: now, updatedAt: now, consentAt: null, completedAt: null, step: 0,
-      about: {}, income: {}, spending: {}, assets: {}, loans: [], insurance: {}, goals: [], risk: {}, skipped: {} };
+      about: {}, income: {}, spending: {}, assets: {}, loans: [], insurance: {}, goals: [], risk: {}, skipped: {},
+      checkins: [], prefs: { closeCall: "split" } };
   }
 
   // ---- This device's own profile ----
-  function loadMine() { return read(KEYS.mine, null); }
+  // Brings older saved profiles up to the current shape.
+  function migrate(p) {
+    if (!p) return p;
+    p.checkins = p.checkins || []; p.prefs = p.prefs || { closeCall: "split" }; p.skipped = p.skipped || {};
+    (p.loans || []).forEach(function (l) { if (!l.lid) l.lid = loanId(); });
+    if (p.spending && p.spending.household && !p.spending.groceries) { p.spending.groceries = p.spending.household; delete p.spending.household; }
+    p.version = 2;
+    return p;
+  }
+  function loanId() { return "L" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function loadMine() { return migrate(read(KEYS.mine, null)); }
   function saveMine(p) { p.updatedAt = new Date().toISOString(); return write(KEYS.mine, p); }
   function clearMine() { remove(KEYS.mine); }
 
   // ---- Profiles the advisor imported (keyed by profile id; a newer import replaces the older one) ----
-  function listFamily() { return read(KEYS.family, []); }
+  function listFamily() { return read(KEYS.family, []).map(migrate); }
   function upsertFamily(p) {
     var list = listFamily(), i = list.findIndex(function (x) { return x.id === p.id; });
-    var entry = Object.assign({}, p, { importedAt: new Date().toISOString() });
+    var entry = Object.assign({}, migrate(p), { importedAt: new Date().toISOString() });
     var replaced = i >= 0;
     if (replaced) {
       if (list[i].updatedAt && p.updatedAt && list[i].updatedAt > p.updatedAt) return { ok: false, reason: "older" };
+      entry.advisor = list[i].advisor; // the advisor's own notes survive a re-import
       list[i] = entry;
     } else list.push(entry);
     return { ok: write(KEYS.family, list), replaced: replaced };
   }
   function deleteFamily(id) { write(KEYS.family, listFamily().filter(function (x) { return x.id !== id; })); }
   function getFamily(id) { return listFamily().find(function (x) { return x.id === id; }) || null; }
+
+  function setAdvisorNote(id, note) {
+    var list = read(KEYS.family, []), x = list.find(function (y) { return y.id === id; });
+    if (!x) return false;
+    x.advisor = Object.assign({}, x.advisor, note, { at: new Date().toISOString() });
+    return write(KEYS.family, list);
+  }
 
   function isFamilyHidden() { return read(KEYS.hide, false) === true; }
   function setFamilyHidden(v) { write(KEYS.hide, !!v); }
@@ -68,7 +88,7 @@
     return { profile: obj.profile };
   }
 
-  var api = { newProfile: newProfile, loadMine: loadMine, saveMine: saveMine, clearMine: clearMine,
+  var api = { migrate: migrate, loanId: loanId, setAdvisorNote: setAdvisorNote, newProfile: newProfile, loadMine: loadMine, saveMine: saveMine, clearMine: clearMine,
     listFamily: listFamily, upsertFamily: upsertFamily, deleteFamily: deleteFamily, getFamily: getFamily,
     isFamilyHidden: isFamilyHidden, setFamilyHidden: setFamilyHidden, toJson: toJson, toCode: toCode, parseTransfer: parseTransfer, FORMAT: FORMAT };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Store = api;

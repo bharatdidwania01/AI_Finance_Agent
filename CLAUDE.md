@@ -15,6 +15,7 @@ Static web app (HTML/CSS/vanilla JS) simulating an India wealth-management advis
 |---|---|
 | `index.html` | Shell + script tags. `BUILD:*` comments mark what `build.js` keeps |
 | `styles.css` | Tokens on `:root` with dark overrides (`prefers-color-scheme` and `[data-theme]`); chart series `--s1..--s6` and status tokens are separate sets |
+| `planner.js` | Pure planning logic on top of engine: `plan` (priority order for monthly surplus or a lump sum, prepay-vs-invest with a 2-point close-call band), `simulate` (what-if sliders), `spendingReport` (check-ins vs usual, 50/30/20), `advisorFlags`, `decisionMessage` |
 | `engine.js` | Pure finance logic: `parseAmount` (accepts "4.5 lakh", "1.2 cr", "50k"), `analyzeProfile` (net worth, cash flow, health checks, goal SIPs), `buildPortfolio` (monthly split + tax tip). No DOM; testable in Node |
 | `questions.js` | The setup questions as data. Add or change questions here, not in app.js |
 | `store.js` | Storage adapter (localStorage) + transfer format (`bharatwealth-nexus/profile` JSON envelope, `BWN1:` base64 code) |
@@ -24,8 +25,15 @@ Static web app (HTML/CSS/vanilla JS) simulating an India wealth-management advis
 
 Classic `<script>` tags (not modules) so it runs from `file://`. jsPDF 2.5.1 / SheetJS 0.18.5 from cdnjs with jsDelivr fallback, looked up at click time.
 
+## Planning rules (planner.js)
+Order for spare money: 1-month buffer -> debt at 12%+ or credit cards (highest rate first) -> emergency fund to 6 months (60% of what's left below 3 months, 40% above; all of a lump sum) -> goals within 3 years (RD/liquid) -> interest on loans in moratorium -> cheaper loans vs investing -> SIPs.
+Prepay vs invest: effective loan rate (education-loan and home-loan interest deductions only under the old regime) vs expected post-tax return (7/9/11% pre-tax by risk, minus 1 point). Gap of 2 points or more decides; inside that it is a close call: her `prefs.closeCall` (default "split") applies and the advisor gets a "Needs your call" flag.
+Wants (trips) are never blocked: the what-if shows the trade-off (loan months and interest, emergency-fund months).
+Check-ins (`checkins[]`, one per month) hold spending by category, per-loan payments and balance, SIPs, extra income, bank balance. The latest check-in updates loan balances and savings. Spending basis = average of the last 3 check-ins, else setup answers.
+
 ## State management rules
-- Own profile: `bwn.myProfile.v1`. Imported family profiles: `bwn.family.v1` (keyed by profile `id`; an older file never overwrites a newer one). Hide switch: `bwn.hideFamily.v1`. All access via `Store`, all wrapped in try/catch.
+- Profiles are migrated on load (`Store.migrate`): loan ids (`lid`), `checkins`, `prefs`, old `household` spending key.
+- Own profile: `bwn.myProfile.v1`. Imported family profiles: `bwn.family.v1` (keyed by profile `id`; an older file never overwrites a newer one; the advisor's `advisor` notes survive re-imports). Hide switch: `bwn.hideFamily.v1`. All access via `Store`, all wrapped in try/catch.
 - A profile's sections are keyed by step id (`about`, `income`, `spending`, `assets`, `loans`, `insurance`, `goals`, `risk`). `skipped[stepId]` = the person chose "Skip" (unknown), which differs from blank (= "I don't have this").
 - Amounts are stored as numbers in rupees, never as text.
 - Escape every user string before `innerHTML` (`esc()`).
