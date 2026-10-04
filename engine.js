@@ -2,7 +2,10 @@
 (function (root) {
   "use strict";
 
-  var HIGH_EARNER_THRESHOLD = 1500000; // > 15 LPA
+  // Tax tilt fires when the client's marginal slab (before cess) is at least 20%:
+  // that is where arbitrage LTCG (12.5%) clearly beats FD interest taxed at slab.
+  var TAX_TILT_SLAB = 0.20;
+  var STANDARD_DEDUCTION = { New: 75000, Old: 50000 };
 
   // Base asset-class mix by risk profile (percent of corpus)
   var BASE = {
@@ -20,13 +23,18 @@
   };
   var CESS = 0.04;
 
-  function marginalRate(income, regime) {
+  // Slab rate (before cess) on the last rupee of taxable income. Only the standard deduction
+  // is applied; other old-regime deductions (80C etc.) are not modelled.
+  function slabRate(income, regime) {
     var slabs = SLABS[regime] || SLABS.New;
+    var taxable = Math.max(0, income - (STANDARD_DEDUCTION[regime] || 0));
     for (var i = 0; i < slabs.length; i++) {
-      if (income <= slabs[i][0]) return slabs[i][1] * (1 + CESS);
+      if (taxable <= slabs[i][0]) return slabs[i][1];
     }
-    return 0.30 * (1 + CESS);
+    return 0.30;
   }
+
+  function marginalRate(income, regime) { return slabRate(income, regime) * (1 + CESS); }
 
   function validate(input) {
     var errors = [];
@@ -50,9 +58,9 @@
     var gold = base.gold;
     var fixed = 100 - equity - gold;
 
-    var highEarner = input.income > HIGH_EARNER_THRESHOLD;
-    // High earners tilt fixed income toward arbitrage funds for post-tax efficiency.
-    var arbShare = highEarner ? 0.6 : 0.3;
+    var taxTilt = slabRate(input.income, input.regime) >= TAX_TILT_SLAB;
+    // Clients in the 20%+ slab tilt fixed income toward arbitrage funds for post-tax efficiency.
+    var arbShare = taxTilt ? 0.6 : 0.3;
     var arb = Math.round(fixed * arbShare);
     var debt = fixed - arb;
 
@@ -71,7 +79,7 @@
 
     var result = {
       errors: [],
-      highEarner: highEarner,
+      taxTilt: taxTilt,
       lines: lines,
       notes: [
         "Equity glide path: " + equity + "% equity for a " + input.risk + " profile at age " + input.age + ".",
@@ -81,7 +89,7 @@
       taxInsight: null
     };
 
-    if (highEarner) result.taxInsight = taxInsight(input);
+    if (taxTilt) result.taxInsight = taxInsight(input);
     return result;
   }
 
@@ -100,7 +108,7 @@
       fdNet: Math.round(fdNet), arbNetLong: Math.round(arbNetLong), arbNetShort: Math.round(arbNetShort),
       annualSavingLong: Math.round(arbNetLong - fdNet),
       text:
-        "Because your income is above ₹15 LPA, you are likely in a " + (slab * 100).toFixed(1) +
+        "Your income puts you in roughly a " + (slab * 100).toFixed(1) +
         "% marginal bracket (incl. 4% cess, before surcharge) under the " + input.regime + " regime. " +
         "FD interest is taxed at that slab rate every year, even if you reinvest it. " +
         "Arbitrage funds are taxed as equity-oriented funds: LTCG at 12.5% (+cess) on gains above ₹1.25 lakh a year when held beyond 12 months, " +
@@ -119,6 +127,6 @@
     return "₹" + fmt(n);
   }
 
-  var api = { buildPortfolio: buildPortfolio, marginalRate: marginalRate, inr: inr, fmt: fmt, HIGH_EARNER_THRESHOLD: HIGH_EARNER_THRESHOLD };
+  var api = { buildPortfolio: buildPortfolio, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Engine = api;
 })(typeof window !== "undefined" ? window : this);

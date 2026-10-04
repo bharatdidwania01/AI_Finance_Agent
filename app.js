@@ -1,4 +1,4 @@
-/* UI layer: view switching, state, rendering. All calculations live in engine.js. */
+/* UI layer: view switching, state, rendering. Finance logic lives in engine.js, file output in exports.js. */
 (function () {
   "use strict";
   var STORE_KEY = "bwn.clients.v1";
@@ -12,11 +12,12 @@
     { name: "Meera Deshpande", city: "Pune", age: 49, income: 15500000, aum: 63000000, risk: "Balanced", regime: "New" }
   ];
 
-  // State: mock clients are constant; user-added clients persist in localStorage (best-effort).
+  // State: MOCK is constant; `added` holds portal submissions and persists per browser (best-effort).
   var added = load();
+  var lastProposal = null; // { input, result } behind the current PDF button
   function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; } }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(added)); } catch (e) { /* private mode */ } }
-  function clients() { return MOCK.concat(added); }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(added)); } catch (e) { /* storage unavailable */ } }
+  function clients() { return MOCK.concat(added.map(function (c) { return Object.assign({ isNew: true }, c); })); }
 
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
@@ -28,32 +29,52 @@
     $("m-count").textContent = list.length;
     $("m-avg").textContent = Engine.inr(aum / list.length);
     $("client-rows").innerHTML = list.map(function (c) {
-      return "<tr><td>" + esc(c.name) + "</td><td>" + esc(c.city || "-") + "</td><td>" + c.age +
-        "</td><td class='num'>" + Engine.inr(c.income) + "</td><td class='num'>" + Engine.inr(c.aum) +
-        "</td><td>" + esc(c.risk) + "</td><td>" + esc(c.regime) + "</td></tr>";
+      return "<tr><td>" + esc(c.name) + (c.isNew ? "<span class='new-flag'>New</span>" : "") + "</td><td>" + esc(c.city || "-") +
+        "</td><td class='num'>" + c.age + "</td><td class='num'>" + Engine.inr(c.income) + "</td><td class='num'>" + Engine.inr(c.aum) +
+        "</td><td><span class='pill " + esc(c.risk) + "'>" + esc(c.risk) + "</span></td><td>" + esc(c.regime) + "</td></tr>";
     }).join("");
   }
 
-  var COLORS = { "Nifty 50 Index Fund": "#b5121b", "Nifty Next 50 Index Fund": "#e0757b", "Short-Term Debt Fund": "#2f5d8a",
-    "Arbitrage Fund": "#6fa3d1", "Sovereign Gold Bonds (SGB)": "#d4a017" };
+  var COLORS = { "Nifty 50 Index Fund": "--c-n50", "Nifty Next 50 Index Fund": "--c-next", "Short-Term Debt Fund": "--c-debt",
+    "Arbitrage Fund": "--c-arb", "Sovereign Gold Bonds (SGB)": "--c-gold" };
+  function color(name) { return "var(" + COLORS[name] + ")"; }
 
   function renderResult(input, r) {
     var bar = r.lines.map(function (l) {
-      return "<div style='width:" + l.pct + "%;background:" + COLORS[l.name] + "' title='" + esc(l.name) + " " + l.pct + "%'></div>";
+      return "<div style='width:" + l.pct + "%;background:" + color(l.name) + "' title='" + esc(l.name) + " " + l.pct + "%'></div>";
     }).join("");
     var rows = r.lines.map(function (l) {
-      return "<tr><td>" + esc(l.cls) + "</td><td>" + esc(l.name) + "</td><td class='num'>" + l.pct + "%</td><td class='num'>" + Engine.inr(l.amount) + "</td></tr>";
+      return "<tr><td>" + esc(l.cls) + "</td><td><span class='sw' style='background:" + color(l.name) + "'></span>" + esc(l.name) +
+        "</td><td class='num'>" + l.pct + "%</td><td class='num'>" + Engine.inr(l.amount) + "</td></tr>";
     }).join("");
-    var html = "<div class='card'><h3>Recommended portfolio for " + esc(input.name) + "</h3>" +
+    var html = "<div class='card'><div class='head' style='margin-bottom:0'><h3>Recommended portfolio for " + esc(input.name.trim()) + "</h3>" +
+      "<button class='btn ghost' id='export-pdf' type='button'>Download proposal (PDF)</button></div>" +
+      "<p class='status' id='pdf-status'></p>" +
       "<div class='alloc'>" + bar + "</div>" +
-      "<div class='table-wrap'><table><thead><tr><th>Asset class</th><th>Instrument</th><th>Weight</th><th>Amount</th></tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+      "<div class='table-wrap'><table><thead><tr><th>Asset class</th><th>Instrument</th><th class='num'>Weight</th><th class='num'>Amount</th></tr></thead><tbody>" +
+      rows + "</tbody></table></div></div>";
     if (r.taxInsight) {
-      html += "<div class='card callout ok'><h3>Tax efficiency: Arbitrage Funds vs FDs</h3><p>" + esc(r.taxInsight.text) + "</p>" +
-        "<p class='small'>Assumes 7% pre-tax return, no surcharge, no exit load. Rates as understood for FY 2025-26; confirm current law with a tax professional.</p></div>";
+      html += "<div class='card callout'><h3>Tax efficiency: Arbitrage Funds vs FDs</h3><p>" + esc(r.taxInsight.text) + "</p>" +
+        "<p class='small'>Assumes a 7% pre-tax return, no surcharge and no exit load. Rates are indicative for FY 2025-26. Confirm current law with a tax professional.</p></div>";
     }
     html += "<div class='card'><h3>Notes</h3><ul>" + r.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></div>";
     $("result").innerHTML = html;
+    $("export-pdf").addEventListener("click", onPdf);
   }
+
+  async function runExport(btn, statusEl, build) {
+    btn.disabled = true; statusEl.textContent = "Preparing file...";
+    try { var f = build(); statusEl.textContent = await Exports.saveFile(f.filename, f.blob); }
+    catch (e) { statusEl.textContent = e.message || "Export failed."; }
+    finally { btn.disabled = false; }
+  }
+  function onPdf() {
+    if (!lastProposal) return;
+    runExport($("export-pdf"), $("pdf-status"), function () { return Exports.proposalPdf(lastProposal.input, lastProposal.result); });
+  }
+  $("export-xlsx").addEventListener("click", function () {
+    runExport($("export-xlsx"), $("xlsx-status"), function () { return Exports.clientBookXlsx(clients()); });
+  });
 
   function show(view) {
     $("view-advisor").hidden = view !== "advisor";
@@ -61,7 +82,6 @@
     document.querySelectorAll(".nav-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     if (view === "advisor") renderAdvisor();
   }
-
   document.querySelectorAll(".nav-btn").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.view); }); });
 
   $("client-form").addEventListener("submit", function (e) {
@@ -73,10 +93,11 @@
     };
     var r = Engine.buildPortfolio(input);
     var err = $("form-error");
-    if (r.errors.length) { err.textContent = r.errors.join(" "); err.hidden = false; $("result").innerHTML = ""; return; }
+    if (r.errors.length) { err.textContent = r.errors.join(" "); err.hidden = false; return; }
     err.hidden = true;
     added.push({ name: input.name.trim(), city: "-", age: input.age, income: input.income, aum: input.corpus, risk: input.risk, regime: input.regime });
     save();
+    lastProposal = { input: input, result: r };
     renderResult(input, r);
   });
 

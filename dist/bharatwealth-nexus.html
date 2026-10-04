@@ -1,0 +1,524 @@
+<title>BharatWealth Nexus</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&display=swap">
+<style>
+/* Layout: fixed left rail (stacks to a top bar on phones) + scrolling work area. */
+:root{
+  --bg:#f3f5f2; --card:#ffffff; --ink:#18221f; --mute:#5d6a65; --line:#dde3df;
+  --rail:#0f3b33; --rail-ink:#e8efe9; --rail-mute:#a9c1b8; --rail-line:#2c5a50;
+  --accent:#0f6b5a; --accent-ink:#ffffff; --brass:#b8892b; --ok:#1d6b3f; --warn:#9a5b00; --err:#b3261e;
+  --c-n50:#0f6b5a; --c-next:#5fae9b; --c-debt:#34508f; --c-arb:#8aa4dd; --c-gold:#b8892b;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-head:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --font-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101614; --card:#18201d; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
+  --rail:#0a1f1b; --rail-ink:#e8efe9; --rail-mute:#8fa9a0; --rail-line:#21423a;
+  --accent:#3fb59b; --accent-ink:#06201a; --brass:#d6a64a; --ok:#5cc489; --warn:#e0a144; --err:#f08a80;
+  --c-n50:#3fb59b; --c-next:#8fd6c4; --c-debt:#6f8fd6; --c-arb:#b3c6ee; --c-gold:#d6a64a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --card:#18201d; --ink:#e7ece9; --mute:#9aa8a2; --line:#2a3531;
+  --rail:#0a1f1b; --rail-ink:#e8efe9; --rail-mute:#8fa9a0; --rail-line:#21423a;
+  --accent:#3fb59b; --accent-ink:#06201a; --brass:#d6a64a; --ok:#5cc489; --warn:#e0a144; --err:#f08a80;
+  --c-n50:#3fb59b; --c-next:#8fd6c4; --c-debt:#6f8fd6; --c-arb:#b3c6ee; --c-gold:#d6a64a;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 var(--font-body);background:var(--bg);color:var(--ink)}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--rail);color:var(--rail-ink);padding:24px 18px;display:flex;flex-direction:column;gap:10px}
+.brand{margin:0;font:600 21px/1.2 var(--font-head)}.brand span{color:var(--brass)}
+.tag{margin:0;color:var(--rail-mute);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+nav{display:flex;flex-direction:column;gap:6px;margin-top:18px}
+.nav-btn{background:transparent;color:var(--rail-ink);border:1px solid var(--rail-line);padding:10px 12px;border-radius:6px;text-align:left;cursor:pointer;font:inherit}
+.nav-btn:hover{border-color:var(--rail-mute)}
+.nav-btn.active{background:var(--rail-ink);color:var(--rail);border-color:var(--rail-ink);font-weight:600}
+.disclaimer{margin-top:auto;font-size:11px;color:var(--rail-mute)}
+main{padding-block:28px;padding-inline:clamp(16px,4vw,36px);max-width:1120px;width:100%;min-width:0}
+h2{margin:0;font:600 26px/1.2 var(--font-head);text-wrap:balance}
+h3{margin:0 0 8px;font:600 17px/1.3 var(--font-head)}
+.head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:20px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.metric span{display:block;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.metric strong{font:500 24px/1.3 var(--font-num)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
+.table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+td.num,th.num{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;border:1px solid currentColor}
+.pill.Conservative{color:var(--c-debt)}.pill.Balanced{color:var(--accent)}.pill.Aggressive{color:var(--warn)}
+.new-flag{font-size:10px;color:var(--brass);margin-left:6px;text-transform:uppercase;letter-spacing:.06em}
+.hint{color:var(--mute);font-size:12px}
+.grid2{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+form{display:grid;gap:14px}
+label{display:grid;gap:4px;font-weight:600;font-size:13px}
+input,select{font:inherit;font-weight:400;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+fieldset{border:1px solid var(--line);border-radius:6px;display:flex;flex-wrap:wrap;gap:18px;padding:8px 12px;margin:0}
+legend{font-size:13px;font-weight:600;padding:0 4px}
+label.inline{display:flex;gap:6px;align-items:center;font-weight:400}
+label.inline input{width:auto}
+.btn{font:inherit;font-weight:600;border-radius:6px;padding:10px 14px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.error{color:var(--err);margin:0;font-size:13px}
+.status{font-size:12px;color:var(--mute);min-height:1em;margin:0}
+#result{display:grid;gap:14px;min-width:0}
+.empty{color:var(--mute);border:1px dashed var(--line);border-radius:8px;padding:24px;text-align:center}
+.alloc{display:flex;height:18px;border-radius:4px;overflow:hidden;margin:10px 0 14px}
+.alloc div{height:100%}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:middle}
+.callout{border-left:3px solid var(--ok)}
+.small{font-size:12px;color:var(--mute)}
+ul{padding-left:18px;margin:0}
+#result td:not(.num){white-space:normal}
+@media(max-width:980px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .sidebar{flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px 16px;gap:10px 16px}
+  .disclaimer,.tag{display:none}
+  nav{flex-direction:row;margin:0;flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="layout">
+  <aside class="sidebar">
+    <p class="brand">BharatWealth <span>Nexus</span></p>
+    <p class="tag">India Wealth Management</p>
+    <nav>
+      <button class="nav-btn active" data-view="advisor" id="nav-advisor">Advisor Dashboard</button>
+      <button class="nav-btn" data-view="client" id="nav-client">Client Portal</button>
+    </nav>
+    <p class="disclaimer">Simulation with mock clients. Not investment or tax advice.</p>
+  </aside>
+
+  <main>
+    <section id="view-advisor">
+      <div class="head">
+        <h2>Advisor Dashboard</h2>
+        <button class="btn ghost" id="export-xlsx">Export client book (.xlsx)</button>
+      </div>
+      <div class="metrics">
+        <div class="metric"><span>Total AUM managed</span><strong id="m-aum">-</strong></div>
+        <div class="metric"><span>Client count</span><strong id="m-count">-</strong></div>
+        <div class="metric"><span>Average client AUM</span><strong id="m-avg">-</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Client</th><th>City</th><th class="num">Age</th><th class="num">Annual income</th><th class="num">AUM</th><th>Risk</th><th>Tax regime</th>
+          </tr></thead>
+          <tbody id="client-rows"></tbody>
+        </table>
+      </div>
+      <p class="status" id="xlsx-status"></p>
+      <p class="hint">Mock HNWI clients. Clients you add in the Client Portal appear here, marked New, and are kept in this browser only.</p>
+    </section>
+
+    <section id="view-client" hidden>
+      <div class="head"><h2>Client Portal</h2></div>
+      <div class="grid2">
+        <form id="client-form" class="card" novalidate>
+          <label for="f-name">Full name
+            <input id="f-name" required placeholder="e.g. Rohan Mehta" autocomplete="name">
+          </label>
+          <label for="f-age">Age
+            <input id="f-age" type="number" min="18" max="90" value="40" required>
+          </label>
+          <label for="f-income">Annual income (INR)
+            <input id="f-income" type="number" min="0" step="10000" value="2500000" required>
+          </label>
+          <label for="f-corpus">Investable corpus (INR)
+            <input id="f-corpus" type="number" min="0" step="100000" value="5000000" required>
+          </label>
+          <label for="f-risk">Risk profile
+            <select id="f-risk">
+              <option>Conservative</option><option selected>Balanced</option><option>Aggressive</option>
+            </select>
+          </label>
+          <fieldset>
+            <legend>Tax regime preference</legend>
+            <label class="inline"><input type="radio" name="regime" id="f-regime-new" value="New" checked> New regime</label>
+            <label class="inline"><input type="radio" name="regime" id="f-regime-old" value="Old"> Old regime</label>
+          </fieldset>
+          <p id="form-error" class="error" hidden></p>
+          <button type="submit" class="btn">Generate portfolio</button>
+        </form>
+        <div id="result"><div class="empty">Fill in the form to see a recommended portfolio and a downloadable PDF proposal.</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';document.head.appendChild(s)"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s)"></script>
+<script>
+/* BharatWealth Nexus rule engine. Pure functions, no DOM access, so it can be unit-tested in Node. */
+(function (root) {
+  "use strict";
+
+  // Tax tilt fires when the client's marginal slab (before cess) is at least 20%:
+  // that is where arbitrage LTCG (12.5%) clearly beats FD interest taxed at slab.
+  var TAX_TILT_SLAB = 0.20;
+  var STANDARD_DEDUCTION = { New: 75000, Old: 50000 };
+
+  // Base asset-class mix by risk profile (percent of corpus)
+  var BASE = {
+    Conservative: { equity: 25, gold: 10 },
+    Balanced:     { equity: 50, gold: 10 },
+    Aggressive:   { equity: 70, gold: 5 }
+  };
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  // Slab tables: [upper bound, rate]. Rates are indicative (FY 2025-26 as understood); verify before relying.
+  var SLABS = {
+    New: [[400000, 0], [800000, .05], [1200000, .10], [1600000, .15], [2000000, .20], [2400000, .25], [Infinity, .30]],
+    Old: [[250000, 0], [500000, .05], [1000000, .20], [Infinity, .30]]
+  };
+  var CESS = 0.04;
+
+  // Slab rate (before cess) on the last rupee of taxable income. Only the standard deduction
+  // is applied; other old-regime deductions (80C etc.) are not modelled.
+  function slabRate(income, regime) {
+    var slabs = SLABS[regime] || SLABS.New;
+    var taxable = Math.max(0, income - (STANDARD_DEDUCTION[regime] || 0));
+    for (var i = 0; i < slabs.length; i++) {
+      if (taxable <= slabs[i][0]) return slabs[i][1];
+    }
+    return 0.30;
+  }
+
+  function marginalRate(income, regime) { return slabRate(income, regime) * (1 + CESS); }
+
+  function validate(input) {
+    var errors = [];
+    if (!input.name || !String(input.name).trim()) errors.push("Name is required.");
+    if (!(input.age >= 18 && input.age <= 90)) errors.push("Age must be between 18 and 90.");
+    if (!(input.income >= 0)) errors.push("Income must be zero or more.");
+    if (!(input.corpus > 0)) errors.push("Investable corpus must be greater than zero.");
+    if (!BASE[input.risk]) errors.push("Choose a valid risk profile.");
+    if (input.regime !== "Old" && input.regime !== "New") errors.push("Choose a tax regime.");
+    return errors;
+  }
+
+  function buildPortfolio(input) {
+    var errors = validate(input);
+    if (errors.length) return { errors: errors };
+
+    var base = BASE[input.risk];
+    // Glide path: ~0.3pt of equity per year away from age 40, capped at +/-10pts.
+    var equity = clamp(base.equity - (input.age - 40) * 0.3, base.equity - 10, base.equity + 10);
+    equity = Math.round(equity);
+    var gold = base.gold;
+    var fixed = 100 - equity - gold;
+
+    var taxTilt = slabRate(input.income, input.regime) >= TAX_TILT_SLAB;
+    // Clients in the 20%+ slab tilt fixed income toward arbitrage funds for post-tax efficiency.
+    var arbShare = taxTilt ? 0.6 : 0.3;
+    var arb = Math.round(fixed * arbShare);
+    var debt = fixed - arb;
+
+    var nifty50Share = input.risk === "Aggressive" ? 0.6 : 0.7;
+    var n50 = Math.round(equity * nifty50Share);
+    var next50 = equity - n50;
+
+    var lines = [
+      { cls: "Equity", name: "Nifty 50 Index Fund", pct: n50 },
+      { cls: "Equity", name: "Nifty Next 50 Index Fund", pct: next50 },
+      { cls: "Fixed Income", name: "Short-Term Debt Fund", pct: debt },
+      { cls: "Fixed Income", name: "Arbitrage Fund", pct: arb },
+      { cls: "Alternatives", name: "Sovereign Gold Bonds (SGB)", pct: gold }
+    ].filter(function (l) { return l.pct > 0; });
+    lines.forEach(function (l) { l.amount = Math.round(input.corpus * l.pct / 100); });
+
+    var result = {
+      errors: [],
+      taxTilt: taxTilt,
+      lines: lines,
+      notes: [
+        "Equity glide path: " + equity + "% equity for a " + input.risk + " profile at age " + input.age + ".",
+        "SGB: RBI has not been issuing fresh tranches recently (unverified, please check); exposure is typically bought on the exchange secondary market, where price can differ from NAV.",
+        "Debt funds bought after 1 Apr 2023 are taxed at slab rate with no indexation; their edge over FDs is liquidity and deferral, not a lower rate."
+      ],
+      taxInsight: null
+    };
+
+    if (taxTilt) result.taxInsight = taxInsight(input);
+    return result;
+  }
+
+  // Illustrative 1-year comparison of Rs 10L in FD vs arbitrage fund at same pre-tax return.
+  function taxInsight(input) {
+    var principal = 1000000, gross = 0.07;
+    var slab = marginalRate(input.income, input.regime);
+    var ltcg = 0.125 * (1 + CESS); // equity-oriented fund held > 12 months, above Rs 1.25L annual exemption
+    var stcg = 0.20 * (1 + CESS);  // held <= 12 months
+    var pre = principal * gross;
+    var fdNet = pre * (1 - slab);
+    var arbNetLong = pre * (1 - ltcg); // exemption ignored (conservative)
+    var arbNetShort = pre * (1 - stcg);
+    return {
+      slabRate: slab, ltcgRate: ltcg, stcgRate: stcg,
+      fdNet: Math.round(fdNet), arbNetLong: Math.round(arbNetLong), arbNetShort: Math.round(arbNetShort),
+      annualSavingLong: Math.round(arbNetLong - fdNet),
+      text:
+        "Your income puts you in roughly a " + (slab * 100).toFixed(1) +
+        "% marginal bracket (incl. 4% cess, before surcharge) under the " + input.regime + " regime. " +
+        "FD interest is taxed at that slab rate every year, even if you reinvest it. " +
+        "Arbitrage funds are taxed as equity-oriented funds: LTCG at 12.5% (+cess) on gains above ₹1.25 lakh a year when held beyond 12 months, " +
+        "and STCG at 20% (+cess) otherwise, and tax falls due only when you redeem. " +
+        "On ₹10 lakh at an assumed 7% pre-tax return, an FD nets about ₹" + fmt(fdNet) +
+        " after tax, versus about ₹" + fmt(arbNetLong) + " for an arbitrage fund held over 12 months (before using the ₹1.25 lakh exemption)."
+    };
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString("en-IN"); }
+
+  // Indian-style compact currency: Rs 12.5 Cr / Rs 45.0 L
+  function inr(n) {
+    if (n >= 1e7) return "₹" + (n / 1e7).toFixed(2) + " Cr";
+    if (n >= 1e5) return "₹" + (n / 1e5).toFixed(2) + " L";
+    return "₹" + fmt(n);
+  }
+
+  var api = { buildPortfolio: buildPortfolio, marginalRate: marginalRate, inr: inr, fmt: fmt, slabRate: slabRate, TAX_TILT_SLAB: TAX_TILT_SLAB };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Engine = api;
+})(typeof window !== "undefined" ? window : this);
+</script>
+<script>
+/* File exports: PDF proposal (jsPDF) and Excel client book (SheetJS). Libraries are looked up at
+   click time so a slow or fallback CDN load never breaks the rest of the app. */
+(function () {
+  "use strict";
+
+  // Hosted on claude.ai the page must ask the viewer to save through the `downloads` capability;
+  // opened as a local file, a normal browser download works.
+  async function saveFile(filename, blob) {
+    if (window.claude && typeof window.claude.use === "function") {
+      var downloads = await window.claude.use("downloads");
+      if (downloads) {
+        try { await downloads.save({ filename: filename, data: blob }); return "Saved " + filename + "."; }
+        catch (e) {
+          if (e && e.code === "declined") return "Download cancelled.";
+          if (e && e.code === "rate_limited") return "A save prompt is already open. Finish it, then try again.";
+          return "Downloads are not available in this view.";
+        }
+      }
+    }
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    return "Downloaded " + filename + ".";
+  }
+
+  function slug(s) { return String(s).trim().replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "client"; }
+  // Standard PDF fonts have no rupee glyph.
+  function pdfText(s) { return String(s).replace(/₹\s?/g, "Rs "); }
+  function today() { return new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); }
+
+  function proposalPdf(input, result) {
+    if (!window.jspdf) throw new Error("The PDF library has not loaded. Check your internet connection and reload.");
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
+    var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 48, y = M;
+    var ink = [24, 34, 31], mute = [93, 106, 101], teal = [15, 107, 90];
+
+    function para(text, size, color, style) {
+      doc.setFont("helvetica", style || "normal"); doc.setFontSize(size); doc.setTextColor.apply(doc, color || ink);
+      var lines = doc.splitTextToSize(pdfText(text), W - 2 * M);
+      if (y + lines.length * size * 1.35 > H - M) { doc.addPage(); y = M; }
+      doc.text(lines, M, y); y += lines.length * size * 1.35;
+    }
+
+    doc.setFillColor(15, 59, 51); doc.rect(0, 0, W, 64, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(255, 255, 255);
+    doc.text("BharatWealth Nexus", M, 40);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text("Portfolio Proposal  |  " + today(), W - M, 40, { align: "right" });
+    y = 98;
+
+    para("Prepared for " + input.name.trim(), 16, ink, "bold"); y += 4;
+    para("Age " + input.age + "  |  Annual income " + Engine.inr(input.income) + "  |  Corpus " + Engine.inr(input.corpus) +
+      "  |  " + input.risk + " risk  |  " + input.regime + " tax regime", 10, mute);
+    y += 14;
+
+    // Allocation bar
+    var x = M, barW = W - 2 * M;
+    result.lines.forEach(function (l) {
+      var w = barW * l.pct / 100; doc.setFillColor.apply(doc, PDF_COLORS[l.name] || teal); doc.rect(x, y, w, 12, "F"); x += w;
+    });
+    y += 30;
+
+    // Allocation table
+    var cols = [M, M + 110, W - M - 120, W - M];
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor.apply(doc, mute);
+    doc.text("ASSET CLASS", cols[0], y); doc.text("INSTRUMENT", cols[1], y);
+    doc.text("WEIGHT", cols[2], y, { align: "right" }); doc.text("AMOUNT", cols[3], y, { align: "right" });
+    y += 8; doc.setDrawColor(221, 227, 223); doc.line(M, y, W - M, y); y += 16;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor.apply(doc, ink);
+    result.lines.forEach(function (l) {
+      doc.setFillColor.apply(doc, PDF_COLORS[l.name] || teal); doc.rect(cols[1] - 12, y - 7, 7, 7, "F");
+      doc.text(l.cls, cols[0], y); doc.text(l.name, cols[1], y);
+      doc.text(l.pct + "%", cols[2], y, { align: "right" }); doc.text(pdfText(Engine.inr(l.amount)), cols[3], y, { align: "right" });
+      y += 20;
+    });
+    doc.line(M, y - 10, W - M, y - 10); y += 16;
+
+    if (result.taxInsight) {
+      para("Tax efficiency: Arbitrage Funds vs Fixed Deposits", 12, teal, "bold"); y += 2;
+      para(result.taxInsight.text, 10); y += 12;
+    }
+    para("Notes", 12, teal, "bold"); y += 2;
+    result.notes.forEach(function (n) { para("- " + n, 10); y += 2; });
+    y += 14;
+    para("Illustrative proposal generated from mock assumptions. Tax rates are indicative for FY 2025-26 and ignore surcharge and " +
+      "deductions other than the standard deduction. Not investment, tax or legal advice. Mutual fund investments are subject to " +
+      "market risks; read all scheme-related documents carefully.", 8, mute);
+
+    return { filename: "Proposal-" + slug(input.name) + ".pdf", blob: doc.output("blob") };
+  }
+
+  var PDF_COLORS = {
+    "Nifty 50 Index Fund": [15, 107, 90], "Nifty Next 50 Index Fund": [95, 174, 155], "Short-Term Debt Fund": [52, 80, 143],
+    "Arbitrage Fund": [138, 164, 221], "Sovereign Gold Bonds (SGB)": [184, 137, 43]
+  };
+
+  function clientBookXlsx(clients) {
+    if (!window.XLSX) throw new Error("The Excel library has not loaded. Check your internet connection and reload.");
+    var rows = clients.map(function (c) {
+      return { "Client": c.name, "City": c.city || "", "Age": c.age, "Annual Income (INR)": c.income, "AUM (INR)": c.aum,
+        "Risk Profile": c.risk, "Tax Regime": c.regime, "Source": c.isNew ? "Client Portal" : "Book" };
+    });
+    var total = clients.reduce(function (s, c) { return s + c.aum; }, 0);
+    var ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 6 }, { wch: 20 }, { wch: 16 }, { wch: 14 }, { wch: 11 }, { wch: 14 }];
+    var summary = XLSX.utils.aoa_to_sheet([
+      ["BharatWealth Nexus - Client Book"], ["Exported", today()], [],
+      ["Total AUM (INR)", total], ["Client count", clients.length], ["Average AUM (INR)", Math.round(total / clients.length)]
+    ]);
+    summary["!cols"] = [{ wch: 22 }, { wch: 18 }];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, summary, "Summary");
+    XLSX.utils.book_append_sheet(wb, ws, "Clients");
+    var buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    return { filename: "BharatWealth-Client-Book.xlsx", blob: blob };
+  }
+
+  window.Exports = { saveFile: saveFile, proposalPdf: proposalPdf, clientBookXlsx: clientBookXlsx };
+})();
+</script>
+<script>
+/* UI layer: view switching, state, rendering. Finance logic lives in engine.js, file output in exports.js. */
+(function () {
+  "use strict";
+  var STORE_KEY = "bwn.clients.v1";
+
+  var MOCK = [
+    { name: "Arjun Malhotra", city: "Mumbai", age: 52, income: 48000000, aum: 185000000, risk: "Balanced", regime: "New" },
+    { name: "Priya Venkataraman", city: "Bengaluru", age: 44, income: 32000000, aum: 96000000, risk: "Aggressive", regime: "New" },
+    { name: "Rajiv Khanna", city: "New Delhi", age: 61, income: 21000000, aum: 142000000, risk: "Conservative", regime: "Old" },
+    { name: "Ananya Iyer", city: "Chennai", age: 38, income: 18500000, aum: 41000000, risk: "Aggressive", regime: "New" },
+    { name: "Vikram Singhania", city: "Kolkata", age: 57, income: 27500000, aum: 118000000, risk: "Balanced", regime: "Old" },
+    { name: "Meera Deshpande", city: "Pune", age: 49, income: 15500000, aum: 63000000, risk: "Balanced", regime: "New" }
+  ];
+
+  // State: MOCK is constant; `added` holds portal submissions and persists per browser (best-effort).
+  var added = load();
+  var lastProposal = null; // { input, result } behind the current PDF button
+  function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; } }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(added)); } catch (e) { /* storage unavailable */ } }
+  function clients() { return MOCK.concat(added.map(function (c) { return Object.assign({ isNew: true }, c); })); }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function renderAdvisor() {
+    var list = clients();
+    var aum = list.reduce(function (s, c) { return s + c.aum; }, 0);
+    $("m-aum").textContent = Engine.inr(aum);
+    $("m-count").textContent = list.length;
+    $("m-avg").textContent = Engine.inr(aum / list.length);
+    $("client-rows").innerHTML = list.map(function (c) {
+      return "<tr><td>" + esc(c.name) + (c.isNew ? "<span class='new-flag'>New</span>" : "") + "</td><td>" + esc(c.city || "-") +
+        "</td><td class='num'>" + c.age + "</td><td class='num'>" + Engine.inr(c.income) + "</td><td class='num'>" + Engine.inr(c.aum) +
+        "</td><td><span class='pill " + esc(c.risk) + "'>" + esc(c.risk) + "</span></td><td>" + esc(c.regime) + "</td></tr>";
+    }).join("");
+  }
+
+  var COLORS = { "Nifty 50 Index Fund": "--c-n50", "Nifty Next 50 Index Fund": "--c-next", "Short-Term Debt Fund": "--c-debt",
+    "Arbitrage Fund": "--c-arb", "Sovereign Gold Bonds (SGB)": "--c-gold" };
+  function color(name) { return "var(" + COLORS[name] + ")"; }
+
+  function renderResult(input, r) {
+    var bar = r.lines.map(function (l) {
+      return "<div style='width:" + l.pct + "%;background:" + color(l.name) + "' title='" + esc(l.name) + " " + l.pct + "%'></div>";
+    }).join("");
+    var rows = r.lines.map(function (l) {
+      return "<tr><td>" + esc(l.cls) + "</td><td><span class='sw' style='background:" + color(l.name) + "'></span>" + esc(l.name) +
+        "</td><td class='num'>" + l.pct + "%</td><td class='num'>" + Engine.inr(l.amount) + "</td></tr>";
+    }).join("");
+    var html = "<div class='card'><div class='head' style='margin-bottom:0'><h3>Recommended portfolio for " + esc(input.name.trim()) + "</h3>" +
+      "<button class='btn ghost' id='export-pdf' type='button'>Download proposal (PDF)</button></div>" +
+      "<p class='status' id='pdf-status'></p>" +
+      "<div class='alloc'>" + bar + "</div>" +
+      "<div class='table-wrap'><table><thead><tr><th>Asset class</th><th>Instrument</th><th class='num'>Weight</th><th class='num'>Amount</th></tr></thead><tbody>" +
+      rows + "</tbody></table></div></div>";
+    if (r.taxInsight) {
+      html += "<div class='card callout'><h3>Tax efficiency: Arbitrage Funds vs FDs</h3><p>" + esc(r.taxInsight.text) + "</p>" +
+        "<p class='small'>Assumes a 7% pre-tax return, no surcharge and no exit load. Rates are indicative for FY 2025-26. Confirm current law with a tax professional.</p></div>";
+    }
+    html += "<div class='card'><h3>Notes</h3><ul>" + r.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></div>";
+    $("result").innerHTML = html;
+    $("export-pdf").addEventListener("click", onPdf);
+  }
+
+  async function runExport(btn, statusEl, build) {
+    btn.disabled = true; statusEl.textContent = "Preparing file...";
+    try { var f = build(); statusEl.textContent = await Exports.saveFile(f.filename, f.blob); }
+    catch (e) { statusEl.textContent = e.message || "Export failed."; }
+    finally { btn.disabled = false; }
+  }
+  function onPdf() {
+    if (!lastProposal) return;
+    runExport($("export-pdf"), $("pdf-status"), function () { return Exports.proposalPdf(lastProposal.input, lastProposal.result); });
+  }
+  $("export-xlsx").addEventListener("click", function () {
+    runExport($("export-xlsx"), $("xlsx-status"), function () { return Exports.clientBookXlsx(clients()); });
+  });
+
+  function show(view) {
+    $("view-advisor").hidden = view !== "advisor";
+    $("view-client").hidden = view !== "client";
+    document.querySelectorAll(".nav-btn").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
+    if (view === "advisor") renderAdvisor();
+  }
+  document.querySelectorAll(".nav-btn").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.view); }); });
+
+  $("client-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var input = {
+      name: $("f-name").value, age: Number($("f-age").value), income: Number($("f-income").value),
+      corpus: Number($("f-corpus").value), risk: $("f-risk").value,
+      regime: document.querySelector("input[name=regime]:checked").value
+    };
+    var r = Engine.buildPortfolio(input);
+    var err = $("form-error");
+    if (r.errors.length) { err.textContent = r.errors.join(" "); err.hidden = false; return; }
+    err.hidden = true;
+    added.push({ name: input.name.trim(), city: "-", age: input.age, income: input.income, aum: input.corpus, risk: input.risk, regime: input.regime });
+    save();
+    lastProposal = { input: input, result: r };
+    renderResult(input, r);
+  });
+
+  renderAdvisor();
+})();
+</script>

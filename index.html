@@ -2,74 +2,88 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- BUILD:HEAD-START -->
 <title>BharatWealth Nexus</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Serif:wght@600&display=swap">
 <link rel="stylesheet" href="styles.css">
+<!-- BUILD:HEAD-END -->
 </head>
 <body>
+<!-- BUILD:BODY-START -->
 <div class="layout">
   <aside class="sidebar">
-    <h1>BharatWealth<span>Nexus</span></h1>
-    <p class="tag">India Wealth Management · Demo</p>
+    <p class="brand">BharatWealth <span>Nexus</span></p>
+    <p class="tag">India Wealth Management</p>
     <nav>
-      <button class="nav-btn active" data-view="advisor">Advisor Dashboard</button>
-      <button class="nav-btn" data-view="client">Client Portal</button>
+      <button class="nav-btn active" data-view="advisor" id="nav-advisor">Advisor Dashboard</button>
+      <button class="nav-btn" data-view="client" id="nav-client">Client Portal</button>
     </nav>
-    <p class="disclaimer">Illustrative simulation with mock data. Not investment or tax advice.</p>
+    <p class="disclaimer">Simulation with mock clients. Not investment or tax advice.</p>
   </aside>
 
   <main>
     <section id="view-advisor">
-      <h2>Advisor Dashboard</h2>
+      <div class="head">
+        <h2>Advisor Dashboard</h2>
+        <button class="btn ghost" id="export-xlsx">Export client book (.xlsx)</button>
+      </div>
       <div class="metrics">
-        <div class="metric"><span>Total AUM Managed</span><strong id="m-aum"></strong></div>
-        <div class="metric"><span>Client Count</span><strong id="m-count"></strong></div>
-        <div class="metric"><span>Avg. Client AUM</span><strong id="m-avg"></strong></div>
+        <div class="metric"><span>Total AUM managed</span><strong id="m-aum">-</strong></div>
+        <div class="metric"><span>Client count</span><strong id="m-count">-</strong></div>
+        <div class="metric"><span>Average client AUM</span><strong id="m-avg">-</strong></div>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Client</th><th>City</th><th>Age</th><th>Annual Income</th><th>AUM</th><th>Risk</th><th>Regime</th>
+            <th>Client</th><th>City</th><th class="num">Age</th><th class="num">Annual income</th><th class="num">AUM</th><th>Risk</th><th>Tax regime</th>
           </tr></thead>
           <tbody id="client-rows"></tbody>
         </table>
       </div>
-      <p class="hint">Clients submitted via the Client Portal are added here (saved in this browser only).</p>
+      <p class="status" id="xlsx-status"></p>
+      <p class="hint">Mock HNWI clients. Clients you add in the Client Portal appear here, marked New, and are kept in this browser only.</p>
     </section>
 
     <section id="view-client" hidden>
-      <h2>Client Portal</h2>
-      <form id="client-form" novalidate>
-        <label>Full name
-          <input id="f-name" required placeholder="e.g. Rohan Mehta">
-        </label>
-        <label>Age
-          <input id="f-age" type="number" min="18" max="90" value="40" required>
-        </label>
-        <label>Annual income (INR)
-          <input id="f-income" type="number" min="0" step="10000" value="2000000" required>
-        </label>
-        <label>Investable corpus (INR)
-          <input id="f-corpus" type="number" min="0" step="100000" value="5000000" required>
-        </label>
-        <label>Risk profile
-          <select id="f-risk">
-            <option>Conservative</option><option selected>Balanced</option><option>Aggressive</option>
-          </select>
-        </label>
-        <fieldset>
-          <legend>Tax regime preference</legend>
-          <label class="inline"><input type="radio" name="regime" value="New" checked> New regime</label>
-          <label class="inline"><input type="radio" name="regime" value="Old"> Old regime</label>
-        </fieldset>
-        <p id="form-error" class="error" hidden></p>
-        <button type="submit" class="primary">Generate portfolio</button>
-      </form>
-      <div id="result"></div>
+      <div class="head"><h2>Client Portal</h2></div>
+      <div class="grid2">
+        <form id="client-form" class="card" novalidate>
+          <label for="f-name">Full name
+            <input id="f-name" required placeholder="e.g. Rohan Mehta" autocomplete="name">
+          </label>
+          <label for="f-age">Age
+            <input id="f-age" type="number" min="18" max="90" value="40" required>
+          </label>
+          <label for="f-income">Annual income (INR)
+            <input id="f-income" type="number" min="0" step="10000" value="2500000" required>
+          </label>
+          <label for="f-corpus">Investable corpus (INR)
+            <input id="f-corpus" type="number" min="0" step="100000" value="5000000" required>
+          </label>
+          <label for="f-risk">Risk profile
+            <select id="f-risk">
+              <option>Conservative</option><option selected>Balanced</option><option>Aggressive</option>
+            </select>
+          </label>
+          <fieldset>
+            <legend>Tax regime preference</legend>
+            <label class="inline"><input type="radio" name="regime" id="f-regime-new" value="New" checked> New regime</label>
+            <label class="inline"><input type="radio" name="regime" id="f-regime-old" value="Old"> Old regime</label>
+          </fieldset>
+          <p id="form-error" class="error" hidden></p>
+          <button type="submit" class="btn">Generate portfolio</button>
+        </form>
+        <div id="result"><div class="empty">Fill in the form to see a recommended portfolio and a downloadable PDF proposal.</div></div>
+      </div>
     </section>
   </main>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';document.head.appendChild(s)"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s)"></script>
 <script src="engine.js"></script>
+<script src="exports.js"></script>
 <script src="app.js"></script>
+<!-- BUILD:BODY-END -->
 </body>
 </html>
